@@ -1,0 +1,22 @@
+name: Deploy to Server
+
+on:
+    push:
+        branches:
+            - main # Draai de workflow bij een push naar main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Install sshpass
+              run: sudo apt-get update && sudo apt-get install -y sshpass
+
+            - name: Deploy via SSH
+              run: |
+                  sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+                    cd /home/dima/api
+                    chmod +x Run.sh
+                    ./Run.sh
+                  EOF
