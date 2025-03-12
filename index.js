@@ -5,7 +5,17 @@ const port = 3000;
 app.use(express.json());
 
 app.get('/', (req, res) => {
-    res.send('Hello, World!');
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Home</title>
+            </head>
+            <body>
+                <h1>Welcome to the home page</h1>
+            </body>
+        </html>
+        `);
 });
 
 app.listen(port, () => {
