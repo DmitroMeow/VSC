@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
     </style>
 </head>
 <body>
-    <h1>Welcome, I just designing it. Come back later.</h1>
+    <h1>Hiiiii :3</h1>
 </body>
 </html>
 
