@@ -1,40 +1,16 @@
 const express = require('express');
+const path = require('path');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Route for the root path
 app.get('/', (req, res) => {
-    res.send(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Home</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: rgb(14, 16, 31);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        h1 {
-            color: rgb(58, 102, 198);
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <h1>Welcome, I just designing it. Come back later.</h1>
-</body>
-</html>
-
-        `);
+    res.sendFile(path.join(__dirname, 'public', 'browser.html'));
 });
 
+// Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
