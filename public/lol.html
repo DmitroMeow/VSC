@@ -1,17 +1,29 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>DmitroMeow's page</title>
-        <style>
-            h1 {
-                width: 40%;
-                height: 100%;
-                color: rgb(0, 0, 0);
-                font-family: 'Courier New', Courier, monospace;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Hiiii XDDD</h1>
-    </body>
+<head>
+    <title>DmitroMeow's page</title>
+    <style>
+        button {
+            width: 40%;
+            height: 100%;
+            color: rgb(0, 0, 0);
+            font-family: 'Courier New', Courier, monospace;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="post()">Go to DmitroMeow's page</button>
+    <script>
+        function post() {
+            fetch('https://web1.davidnet.net/post', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: "visit" }) 
+            })
+            .then(response => response.text())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
 </html>
