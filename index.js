@@ -9,7 +9,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'browser.html'));
 });
-
+app.get('/lol', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'lol.html'));
+});
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
