@@ -14,10 +14,6 @@ app.get('/lol', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'lol.html'));
 });
 
-app.post('/post', (req, res) => {
-    res.send('POST request received!');
-});
-
 // Start the server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
