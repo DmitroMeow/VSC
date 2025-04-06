@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DmitroMeow</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    <style>
+        /* * {
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+            font-size: 11px;
+        } */
+        body {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: sans-serif;
+            color: #fff;
+            background-image: url('https://i.postimg.cc/dVhZ8WqX/axiom-pattern-1.png');
+            background-size: 100px ;
+            background-repeat:repeat;
+            overflow: hidden;
+            background-color: #000000;
+        }
+        form {
+            box-shadow: 0 0 50px #f1f1f1;
+            padding: 2% 2% 2%;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        button {
+        padding: 0.4em 1em; /* Increase padding for a larger button */
+        border: 0;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 1.5em; /* Increase font size */
+        cursor: pointer;
+        border-radius: 6px; /* Slightly larger border radius */
+    }
+        #login {
+            text-decoration: none;
+            color: #ababab;
+            font-size: 1em; /* Increase font size */
+            text-align: center;
+            padding: 0.5em 1em; /* Increase padding for larger link */
+            border-radius: 6px; /* Slightly larger border radius */
+        }
+        input {
+        padding: 0.4em 1em; /* Increase padding for larger input fields */
+        border: 0;
+        background-color: transparent;
+        color: #fff;
+        font-size: 1em; /* Increase font size */
+        width: 200px; /* Increase width */
+        }
+        input:focus {
+            outline: 0;
+            transition-duration: 0.5s;
+        }
+        fieldset {
+        border: 3px solid #fff; /* Thicker border */
+        transition-duration: 0.5s;
+        border-radius: 6px; /* Slightly larger border radius */
+        }
+        fieldset:focus-within {
+            border-color: rgba(255, 255, 255, 0.5);
+            transition-duration: 0.5s;
+        }
+        legend {
+        margin-left: 0.5em;
+        padding-inline: 1em;
+        font-size: 1.2em; /* Increase font size */
+    }
+    </style>
+</head>
+<body>
+    <form method="POST" action="/submit">
+        <fieldset>
+            <legend>Email</legend>
+            <input type="email" id="email" name="email" required>
+        </fieldset>
+        <fieldset>
+            <legend>Username</legend>
+            <input type="text" id="text" name="text" required>
+        </fieldset>
+        <fieldset>
+            <legend>Password</legend>
+            <input type="password" id="password" name="password" required>
+        </fieldset>
+        <button type="submit">Sign in</button>
+        <a href="login" id="login">Already got an account? Log in</a>
+    </form>
+    <script>
+        const form = document.querySelector('form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent the default form submission
+    
+            const email = document.getElementById('email').value;
+            const text = document.getElementById('text').value;
+            const password = document.getElementById('password').value;
+    
+            const response = await fetch('/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, text, password })
+            });
+    
+            const result = await response.text();
+            alert(result); // Show the server's response
+        });
+    </script>
+</body>
+</html>

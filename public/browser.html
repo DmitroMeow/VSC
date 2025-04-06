@@ -1,25 +1,217 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>DmitroMeow's page</title>
-        <style>
-            body {
-                background-color: rgb(0, 5, 14);
-                background-image: url('https://i.postimg.cc/dVhZ8WqX/axiom-pattern-1.png');
-                background-size: 100px ;
-                background-repeat:repeat;
-                height: 100vh;
-                overflow: hidden;
-            }
-            h1 {
-                width: 40%;
-                height: 100%;
-                color: white;
-                font-family: 'Courier New', Courier, monospace;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Currently in dev.</h1>
-    </body>
+  <head>
+    <title>DmitroMeow</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <style>
+      body {
+        background-color: rgb(0, 0, 0);
+        background-image: url("https://i.postimg.cc/dVhZ8WqX/axiom-pattern-1.png");
+        background-size: 100px;
+        background-repeat: repeat;
+        height: 100vh;
+        overflow: hidden;
+      }
+      nav {
+        padding-left: 20px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        gap: 20px;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      .navbutton {
+        font-family: sans-serif;
+        padding: 5px 20px;
+        background-color: #ffffff;
+        color: #000000;
+        font-size: 1.2em;
+        cursor: pointer;
+        border-radius: 4px;
+        text-decoration: none;
+        box-shadow: 0 0 10px #000;
+      }
+      .weather-card {
+        font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+        background-color: rgba(0, 106, 255, 0.9);
+        margin: auto;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 240px;
+        border-radius: 15px;
+        padding: 15px;
+        box-shadow: 0 0 20px rgb(0, 106, 255, 0.9);
+      }
+      #weather_icon {
+        width: 30%;
+        height: 30%;
+        margin-left: 35%;
+      }
+      .temperature {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        font-size: 28px;
+        font-weight: bold;
+        color: #fff;
+      }
+
+      .temperature svg {
+        fill: rgb(255, 255, 255);
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+      }
+
+      .weather-details {
+        border-top: 1px solid #ffffff;
+        padding-top: 10px;
+        color: #fff;
+      }
+
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+      }
+
+      .detail-label {
+        display: flex;
+        align-items: center;
+        color: #ffffff;
+      }
+
+      .detail-label svg {
+        margin-right: 10px;
+        width: 20px;
+        height: 20px;
+      }
+
+      .detail-value {
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <img
+        src="icon.png"
+        alt="Logo"
+        style="width: 50px; height: 50px; margin-right: 10px"
+      />
+      <a class="navbutton" href="/">Home</a>
+      <a class="navbutton" href="/account">Account</a>
+    </nav>
+    <div class="weather-card">
+      <div class="cloud-icon">
+        <img
+          id="weather_icon"
+          src="//cdn.weatherapi.com/weather/64x64/day/122.png"
+          alt="Wait"
+        />
+      </div>
+
+      <div class="temperature">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M0 0h24v24H0z" fill="none" />
+          <path
+            d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-2z"
+          />
+        </svg>
+        <div id="temp_c" class="detail-value">24°C</div>
+      </div>
+      <div class="weather-details">
+        <div class="detail-row">
+          <div class="detail-label">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#fff"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M12 12c0-3 2.5-5.5 5.5-5.5S23 9 23 12H12zm0 0c0 3-2.5 5.5-5.5 5.5S1 15 1 12h11zm0 0c-3 0-5.5-2.5-5.5-5.5S9 1 12 1v11zm0 0c3 0 5.5 2.5 5.5 5.5S15 23 12 23V12z"
+              />
+            </svg>
+            Wind
+          </div>
+          <div id="wind" class="detail-value">15 km/h</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#fff"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"
+              />
+            </svg>
+            Clouds
+          </div>
+          <div id="cloud" class="detail-value">25%</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#fff"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-8c0-.55.45-1 1-1s1 .45 1 1h-2z"
+              />
+            </svg>
+            Feels like
+          </div>
+          <div id="feel_c" class="detail-value">26°C</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      async function getWeather() {
+        try {
+          const response = await fetch("/weather", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error("No weather data available");
+          }
+
+          const weatherData = await response.json();
+          document.getElementById("temp_c").innerText =
+            weatherData.temp_c + "°C";
+          document.getElementById("wind").innerText =
+            weatherData.wind_kph + " km/h";
+          document.getElementById("cloud").innerText = weatherData.cloud + "%";
+          document.getElementById("feel_c").innerText =
+            weatherData.feel_c + "°C";
+          document.getElementById("weather_icon").src =
+            weatherData.condition.icon;
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+      getWeather();
+      setInterval(getWeather, 1000 * 60);
+    </script>
+  </body>
 </html>
