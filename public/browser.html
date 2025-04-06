@@ -139,6 +139,7 @@
             src="//cdn.weatherapi.com/weather/64x64/day/122.png"
             alt="Wait"
           />
+<<<<<<< HEAD
         </div>
   
         <div class="temperature">
@@ -149,6 +150,44 @@
             />
           </svg>
           <div id="temp_c" class="detail-value">0°C</div>
+=======
+        </svg>
+        <div id="temp_c" class="detail-value">0°C</div>
+      </div>
+      <div class="weather-details">
+        <div class="detail-row">
+          <div class="detail-label">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#fff"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M12 12c0-3 2.5-5.5 5.5-5.5S23 9 23 12H12zm0 0c0 3-2.5 5.5-5.5 5.5S1 15 1 12h11zm0 0c-3 0-5.5-2.5-5.5-5.5S9 1 12 1v11zm0 0c3 0 5.5 2.5 5.5 5.5S15 23 12 23V12z"
+              />
+            </svg>
+            Wind
+          </div>
+          <div id="wind" class="detail-value">0 km/h</div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-label">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="#fff"
+            >
+              <path d="M0 0h24v24H0z" fill="none" />
+              <path
+                d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"
+              />
+            </svg>
+            Clouds
+          </div>
+          <div id="cloud" class="detail-value">0%</div>
+>>>>>>> eb4f5ba539e030955a9cd82c08078b16883fdff8
         </div>
         <div class="weather-details">
           <div class="detail-row">
@@ -201,6 +240,10 @@
             </div>
             <div id="feel_c" class="detail-value">0°C</div>
           </div>
+<<<<<<< HEAD
+=======
+          <div id="feel_c" class="detail-value">0°C</div>
+>>>>>>> eb4f5ba539e030955a9cd82c08078b16883fdff8
         </div>
       </div>
       <script>
@@ -230,6 +273,22 @@
           } catch (error) {
             console.error("Error:", error);
           }
+<<<<<<< HEAD
+=======
+
+          const weatherData = await response.json();
+          document.getElementById("temp_c").innerText =
+            weatherData.temp_c + "°C";
+          document.getElementById("wind").innerText =
+            weatherData.wind_kph + " km/h";
+          document.getElementById("cloud").innerText = weatherData.cloud + "%";
+          document.getElementById("feel_c").innerText =
+            weatherData.feelslike_c + "°C";
+          document.getElementById("weather_icon").src =
+            weatherData.condition.icon;
+        } catch (error) {
+          console.error("Error:", error);
+>>>>>>> eb4f5ba539e030955a9cd82c08078b16883fdff8
         }
         getWeather();
         setInterval(getWeather, 1000 * 60);

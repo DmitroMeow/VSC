@@ -11,7 +11,7 @@ let weatherData = { current: {} };
 async function fetchWeather() {
   try {
     const response = await fetch(
-      "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Ukraine&aqi=no",
+      "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no",
       {
         method: "GET",
         headers: {
