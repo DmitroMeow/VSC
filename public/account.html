@@ -1,48 +1,85 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>DmitroMeow</title>
-        <link rel="icon" type="image/png" href="icon.png">
-        <style>
-            body {
-                background-color: rgb(0, 0, 0);
-                background-image: url('https://i.postimg.cc/dVhZ8WqX/axiom-pattern-1.png');
-                background-size: 100px ;
-                background-repeat:repeat;
-                height: 100vh;
-                overflow: hidden;
-            }
-            nav {
-                padding-left: 20px;
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: left;
-                gap: 20px;
-                background-color: rgba(0, 0, 0, 0.5);
-            }
-            .navbutton {
-                font-family: sans-serif;
-                padding: 5px 20px;
-                background-color: #ffffff;
-                color: #000000;
-                font-size: 1.2em;
-                cursor: pointer;
-                border-radius: 4px;
-                text-decoration: none;
-                box-shadow: 0 0 10px #000;
-            }
-        </style>
-    </head>
-    <body>
-        <nav>
-            <img src="icon.png" alt="Logo" style="width: 50px; height: 50px; margin-right: 10px;">
-            <a class="navbutton" href="/">Home</a>
-            <a class="navbutton" href="/account">Account</a>
-        </nav>
-    </body>
+  <head>
+    <title>DmitroMeow</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <style>
+      body {
+        background-color: rgb(0, 0, 0);
+        background-image: url("https://i.postimg.cc/dVhZ8WqX/axiom-pattern-1.png");
+        background-size: 100px;
+        background-repeat: repeat;
+        height: 100vh;
+        overflow: hidden;
+      }
+      nav {
+        padding-left: 20px;
+        padding-right: 20px;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        gap: 20px;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+      #logo {
+        position: fixed;
+        width: 50px;
+        height: 50px;
+        top: 0;
+        right: 0;
+        margin-right: 10px;
+      }
+      #github {
+        position: fixed;
+        width: 50px;
+        height: 50px;
+        top: 0;
+        right: 0;
+        margin-right: 65px;
+      }
+      .navbutton {
+        font-family: sans-serif;
+        padding: 5px 20px;
+        background-color: #000000;
+        color: #ffffff;
+        font-size: 1.2em;
+        cursor: pointer;
+        border-radius: 4px;
+        text-decoration: none;
+        box-shadow: 0 0 10px rgb(0, 106, 255, 0.9);
+        transition: 0.3s;
+      }
+      .navbutton:hover {
+        background-color: rgb(0, 106, 255, 0.8);
+        transition: 0.3s;
+      }
+      #content {
+        position: absolute;
+        width: 70%;
+        height: 80%;
+        border-radius: 10px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgb(0, 106, 255, 0.8);
+        box-shadow: 0 0 20px rgb(0, 106, 255, 0.9);
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a class="navbutton" href="/">Home</a>
+      <a class="navbutton" href="/account">Account</a>
+      <img src="icon.png" alt="Logo" id="logo" />
+      <a href="https://github.com/DmitroMeow/VSC" target="_blank"
+        ><img src="github.png" alt="Github" id="github"
+      /></a>
+    </nav>
+    <div id="content"></div>
+  </body>
 </html>

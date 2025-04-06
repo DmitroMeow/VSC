@@ -24,7 +24,6 @@ async function fetchWeather() {
       throw new Error(`Error fetching weather: ${response.statusText}`);
     }
     weatherData = await response.json(); // Parse the JSON response
-    console.log(weatherData.current);
   } catch (error) {
     console.error("Error fetching weather data:", error);
   }
@@ -36,7 +35,6 @@ setInterval(fetchWeather, 1000 * 60); // Fetch every 60 seconds
 
 app.post("/weather", (req, res) => {
   res.send(weatherData.current);
-  console.log(weatherData.current);
 });
 
 app.get("/", (req, res) => {
@@ -51,9 +49,9 @@ app.get("/", (req, res) => {
 //     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 // });
 
-// app.get('/account', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'account.html'));
-// });
+app.get("/account", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "account.html"));
+});
 
 // app.post('/login', (req, res) => {
 //     const { email, password } = req.body;
