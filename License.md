@@ -1,5 +1,3 @@
-Hiii :3
-
 MIT License
 
 Copyright (c) 2025 DmitroMeow
