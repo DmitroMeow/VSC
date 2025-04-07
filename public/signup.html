@@ -6,91 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
       body {
+        height: 100vh;
         font-family: sans-serif;
-        background-color: rgb(0, 0, 0);
+        color: #fff;
         background-image: url("https://www.transparenttextures.com/patterns/axiom-pattern.png");
         background-size: 100px;
         background-repeat: repeat;
-        height: 100vh;
         overflow: hidden;
-      }
-      nav {
-        padding-left: 20px;
-        padding-right: 20px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: left;
-        gap: 20px;
-        background-color: rgba(0, 0, 0, 0.5);
-      }
-      #logo {
-        position: fixed;
-        width: 50px;
-        height: 50px;
-        top: 0;
-        right: 0;
-        margin-right: 10px;
-      }
-      #github {
-        position: fixed;
-        width: 50px;
-        height: 50px;
-        top: 0;
-        right: 0;
-        margin-right: 65px;
-      }
-      .navbutton {
-        padding: 5px 20px;
         background-color: #000000;
-        color: #ffffff;
-        font-size: 1.2em;
-        cursor: pointer;
-        border-radius: 4px;
-        text-decoration: none;
-        box-shadow: 0 0 10px rgb(0, 106, 255, 0.9);
-        transition: 0.3s;
-      }
-      .navbutton:hover {
-        background-color: rgb(0, 106, 255, 0.8);
-        transition: 0.3s;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
       }
       form {
-        width: 30%;
-        height: 70%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
         box-shadow: 0 0 50px rgb(0, 106, 255, 0.9);
-        padding: 2%;
+        padding: 5% 5% 5%;
         border-radius: 10px;
-        display: flex;
-        flex-direction: column;
         gap: 2rem;
+        grid-column: span 1 / span 1;
+        grid-row: span 2 / span 2;
+        grid-column-start: 2;
+        grid-row-start: 2;
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        min-width: 300px;
+        min-height: 350px;
       }
       button {
-        padding: 1em; /* Increase padding for a larger button */
+        padding: 0 0; /* Increase padding for a larger button */
         border: 0;
-        background-color: #ffffff;
-        color: #000000;
+        background-color: rgb(0, 106, 255);
+        color: #ffffff;
         font-size: 1.5em; /* Increase font size */
         cursor: pointer;
         border-radius: 6px; /* Slightly larger border radius */
+        grid-row-start: 3;
         transition: 0.3s;
       }
       button:hover {
-        background-color: rgb(0, 106, 255);
+        background-color: #fff; /* Slightly transparent on hover */
+        color: rgb(0, 106, 255);
         transition: 0.3s;
       }
       #login {
-        color: #ababab;
-        font-size: 1.5em; /* Increase font size */
+        text-decoration: none;
+        color: #ffffff;
+        font-size: 1em; /* Increase font size */
         text-align: center;
+        padding: 0.5em 1em; /* Increase padding for larger link */
+        border-radius: 6px; /* Slightly larger border radius */
+        grid-row-start: 4;
       }
       #loginbutton {
         color: rgb(0, 106, 255);
@@ -98,44 +64,54 @@
         padding: 0 0 0 5px; /* Increase padding for larger link */
       }
       input {
-        padding: 0.5em 1% 0.5em 1%; /* Increase padding for larger input fields */
+        padding: 0.4em 1em;
         border: 0;
-        outline: 0;
         background-color: transparent;
         color: #fff;
-        font-size: 2em; /* Increase font size */
-        width: 98%; /* Increase width */
+        font-size: 1.3em;
+        width: 90%;
+      }
+      input:focus {
+        outline: 0;
+        transition-duration: 0.5s;
+      }
+      #name {
+        grid-row-start: 2;
+      }
+      #password {
+        grid-row-start: 3;
       }
       fieldset {
-        border: 3px solid #fff; /* Thicker border */
+        border: 3px solid rgb(0, 106, 255); /* Thicker border */
         transition-duration: 0.5s;
         border-radius: 6px; /* Slightly larger border radius */
       }
       fieldset:focus-within {
-        border-color: rgb(0, 106, 255);
-        transition-duration: 0.3s;
+        border-color: rgba(255, 255, 255);
+        transition-duration: 0.5s;
       }
       legend {
-        margin-left: 0.5em;
-        padding-inline: 1em;
-        font-size: 1.2em; /* Increase font size */
-        color: #fff;
+        padding-inline: 0.2em;
       }
     </style>
   </head>
   <body>
     <form method="POST" action="/submit">
       <fieldset class="input">
-        <legend>Username</legend>
+        <legend><b>Username</b></legend>
         <input type="text" id="text" name="text" required />
       </fieldset>
       <fieldset class="input">
-        <legend>Password</legend>
+        <legend><b>Password</b></legend>
         <input type="password" id="password" name="password" required />
       </fieldset>
-      <button class="input" type="submit">Sign in</button>
+      <button class="input" type="submit"><b>Sign up</b></button>
       <p id="login">
-        Dont have account?<a id="loginbutton" href="/login">Sign in</a>
+        <b
+          >Already got an account?<a id="loginbutton" href="/login"
+            >Log in</a
+          ></b
+        >
       </p>
     </form>
     <script>
@@ -147,7 +123,7 @@
         const text = document.getElementById("text").value;
         const password = document.getElementById("password").value;
 
-        const response = await fetch("/signin", {
+        const response = await fetch("/signup", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

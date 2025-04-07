@@ -7,7 +7,7 @@
     <style>
       body {
         height: 100vh;
-        font-family: sans-serif;
+        font-family:sans-serif;
         color: #fff;
         background-image: url("https://www.transparenttextures.com/patterns/axiom-pattern.png");
         background-size: 100px;
@@ -42,6 +42,12 @@
         cursor: pointer;
         border-radius: 6px; /* Slightly larger border radius */
         grid-row-start: 3;
+        transition: 0.3s;
+      }
+      button:hover {
+        background-color: #fff; /* Slightly transparent on hover */
+        color: rgb(0, 106, 255);
+        transition: 0.3s;
       }
       #login {
         text-decoration: none;
@@ -102,7 +108,7 @@
     </fieldset>
     <button class="input" type="submit"><b>Log in</b></button>
     <p id="login">
-      Already got an account?<a id="loginbutton" href="/signin">Sign in</a>
+      <b>Dont have an account?<a id="loginbutton" href="/signup">Sign up</a></b>
     </p>
   </form>
     <script>
