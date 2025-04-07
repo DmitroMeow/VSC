@@ -31,7 +31,7 @@ async function fetchWeather() {
 
 // Fetch weather data every minute
 fetchWeather(); // Initial fetch
-setInterval(fetchWeather, 1000 * 60); // Fetch every 60 seconds
+setInterval(fetchWeather, 1000 * 60 * 3); // Fetch every 3 minutes
 
 app.post("/weather", (req, res) => {
   res.send(weatherData.current);
@@ -41,13 +41,13 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "browser.html"));
 });
 
-// app.get('/signin', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'signin.html'));
-// });
+app.get("/signin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "signin.html"));
+});
 
-// app.get('/login', (req, res) => {
-//     res.sendFile(path.join(__dirname, 'public', 'login.html'));
-// });
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
 app.get("/account", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account.html"));
