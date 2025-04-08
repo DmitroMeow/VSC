@@ -50,11 +50,16 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/account", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "account.html"));
+  console.log(req);
+  res.sendFile(path.join(__dirname, "public", "notloged.html"));
+});
+
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
 });
 
 // app.post('/login', (req, res) => {
-//     const { email, password } = req.body;
+//     const { email, password }  = req.body;
 //     res.send("Proccessing");
 // });
 

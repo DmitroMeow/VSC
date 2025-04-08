@@ -117,6 +117,8 @@
     <script>
       const form = document.querySelector("form");
       form.addEventListener("submit", async (event) => {
+        console.warn(sessionStorage.getItem("token"));
+
         event.preventDefault(); // Prevent the default form submission
 
         const email = document.getElementById("email").value;
