@@ -96,14 +96,14 @@
     </style>
   </head>
   <body>
-    <form method="POST" action="/submit">
-      <fieldset class="input">
+    <form method="POST" action="/signup">
+      <fieldset class="input" id="namefield">
         <legend><b>Username</b></legend>
-        <input type="text" id="text" name="text" required />
+        <input type="text" id="name" name="name" />
       </fieldset>
-      <fieldset class="input">
+      <fieldset class="input" id="passfield">
         <legend><b>Password</b></legend>
-        <input type="password" id="password" name="password" required />
+        <input type="password" id="password" name="password" />
       </fieldset>
       <button class="input" type="submit"><b>Sign up</b></button>
       <p id="login">
@@ -117,24 +117,29 @@
     <script>
       const form = document.querySelector("form");
       form.addEventListener("submit", async (event) => {
-        console.warn(sessionStorage.getItem("token"));
-
         event.preventDefault(); // Prevent the default form submission
-
-        const email = document.getElementById("email").value;
-        const text = document.getElementById("text").value;
+        const username = document.getElementById("name").value;
         const password = document.getElementById("password").value;
+        if (!username) {
+          document.getElementById("namefield").style.border = "3px solid red"; // Highlight the field in red
+        } else if (!password) {
+          document.getElementById("passfield").style.border = "3px solid red"; // Highlight the field in red
+        } else {
+          document.getElementById("namefield").style.border =
+            "3px solid rgb(0, 106, 255)";
+          document.getElementById("passfield").style.border =
+            "3px solid rgb(0, 106, 255)";
+          const response = await fetch("/signup", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          });
 
-        const response = await fetch("/signup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, text, password }),
-        });
-
-        const result = await response.text();
-        alert(result); // Show the server's response
+          const result = await response.text();
+          alert(result);
+        }
       });
     </script>
   </body>

@@ -1,42 +1,75 @@
 const express = require("express");
+const sqlite3 = require("sqlite3").verbose();
+const bcrypt = require("bcrypt");
 const path = require("path");
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+// Database setup
+const database = new sqlite3.Database("./users.db", (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+});
 
+database.run(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password TEXT NOT NULL
+  )
+`);
+
+// User functions
+async function getUser(username) {
+  return new Promise((resolve, reject) => {
+    database.get(
+      "SELECT * FROM users WHERE username = ?",
+      [username],
+      (err, row) => {
+        if (err) return reject(err);
+        resolve(row || null);
+      }
+    );
+  });
+}
+
+async function addUser(username, password) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  return new Promise((resolve, reject) => {
+    database.run(
+      "INSERT INTO users (username, password) VALUES (?, ?)",
+      [username, hashedPassword],
+      function (err) {
+        if (err) return reject(err);
+        resolve(this.lastID);
+      }
+    );
+  });
+}
+
+// Weather API
 let weatherData = { current: {} };
-// Function to fetch weather data
+
 async function fetchWeather() {
   try {
     const response = await fetch(
-      "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no",
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
+      "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no"
     );
-
-    if (!response.ok) {
-      throw new Error(`Error fetching weather: ${response.statusText}`);
-    }
-    weatherData = await response.json(); // Parse the JSON response
+    weatherData = await response.json();
   } catch (error) {
     console.error("Error fetching weather data:", error);
   }
 }
 
-// Fetch weather data every minute
-fetchWeather(); // Initial fetch
-setInterval(fetchWeather, 1000 * 60 * 3); // Fetch every 3 minutes
+fetchWeather();
+setInterval(fetchWeather, 1000 * 60 * 3);
 
-app.post("/weather", (req, res) => {
-  res.send(weatherData.current);
-});
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
 
+// Routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "browser.html"));
 });
@@ -50,25 +83,80 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/account", (req, res) => {
-  console.log(req);
-  res.sendFile(path.join(__dirname, "public", "notloged.html"));
+  console.log(req.cookies);
+  if (req.cookies && req.cookies.userId) {
+    const userId = req.cookies.userId; // Read cookie
+
+    // Now you can fetch user data using userId
+    res.sendFile(path.join(__dirname, "public", "account.html"));
+  } else {
+    res.sendFile(path.join(__dirname, "public", "notloged.html"));
+  }
 });
 
+app.post("/weather", (req, res) => {
+  res.json(weatherData.current);
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!password) {
+      return res.status(400).send("Password is required");
+    }
+
+    const user = await getUser(username);
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).send("Invalid password");
+    }
+    res.cookie("userId", user.id, {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true, // Block JavaScript access
+    });
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+app.post("/signup", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).send("Username and password are required");
+    }
+
+    const existingUser = await getUser(username);
+    if (existingUser) {
+      return res.status(409).send("Username already exists");
+    }
+
+    const userId = await addUser(username, password);
+    res.cookie("userId", user.id, {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true, // Block JavaScript access
+    });
+    res.status(201).send(true);
+  } catch (err) {
+    console.error("Signup error:", err);
+    res.status(500).send(err.message || "Internal server error");
+  }
+});
+
+// Error handling
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
 });
 
-// app.post('/login', (req, res) => {
-//     const { email, password }  = req.body;
-//     res.send("Proccessing");
-// });
-
-// app.post('/signin', (req, res) => {
-//     const { email, username, password } = req.body;
-//     res.send("Proccessing");
-// });
-
-// Start the server
+// Start server
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
