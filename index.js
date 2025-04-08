@@ -83,15 +83,8 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/account", (req, res) => {
-  console.log(req.cookies);
-  if (req.cookies && req.cookies.userId) {
-    const userId = req.cookies.userId; // Read cookie
-
-    // Now you can fetch user data using userId
-    res.sendFile(path.join(__dirname, "public", "account.html"));
-  } else {
-    res.sendFile(path.join(__dirname, "public", "notloged.html"));
-  }
+  // res.sendFile(path.join(__dirname, "public", "account.html"));
+  res.sendFile(path.join(__dirname, "public", "notloged.html"));
 });
 
 app.post("/weather", (req, res) => {
@@ -115,10 +108,6 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).send("Invalid password");
     }
-    res.cookie("userId", user.id, {
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true, // Block JavaScript access
-    });
     res.status(200).json({ success: true });
   } catch (err) {
     console.error("Login error:", err);
@@ -140,10 +129,7 @@ app.post("/signup", async (req, res) => {
     }
 
     const userId = await addUser(username, password);
-    res.cookie("userId", user.id, {
-      maxAge: 24 * 60 * 60 * 1000,
-      httpOnly: true, // Block JavaScript access
-    });
+
     res.status(201).send(true);
   } catch (err) {
     console.error("Signup error:", err);
