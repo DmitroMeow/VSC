@@ -54,14 +54,14 @@ async function addremove(add, id, token) {
     `,[id,token], function (err){
       if (err){return false}
       return true
-    }
+    })
   } else {
     database.run(`
     DELETE FROM sessions WHERE id = $1
     `,[id], function (err){
       if (err){return false}
       return true
-  }}
+  }})
 };
 
 async function addUser(username, password) {
