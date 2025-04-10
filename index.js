@@ -61,7 +61,7 @@ async function addremove(add, id, token) {
     `,[id], function (err){
       if (err){return false}
       return true
-  }})
+  })}
 };
 
 async function addUser(username, password) {
