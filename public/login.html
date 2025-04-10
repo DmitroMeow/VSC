@@ -138,8 +138,9 @@
             body: JSON.stringify({ username, password }),
           });
 
-          const result = await response.text();
-          alert(result);
+          const result=await response;
+          localStorage.setItem("web1.davidnet.net/acctoken", result.jwt)
+          localStorage.setItem("web1.davidnet.net/updtoken", result.updjwt)
         }
       });
     </script>
