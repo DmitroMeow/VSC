@@ -5,7 +5,7 @@ const path = require("path");
 const app = express();
 const port = process.env.PORT || 3000;
 const jwt = require("jsonwebtoken");
-const jwttoken = "12345678"
+const jwttoken = "12345678";
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) {
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS sessions (
   id INTEGER PRIMARY KEY,
   token TEXT NOT NULL
 )
-`)
+`);
 
 // User functions
 async function getUser(username) {
@@ -41,28 +41,44 @@ async function getUser(username) {
   });
 }
 
-async function authenticate(token){
+async function authenticate(token) {
   jwt.verify(token, jwttoken, (err, id) => {
-    if (err) {return false};
-    return id
-})};
+    if (err) {
+      return false;
+    }
+    return id;
+  });
+}
 
 async function addremove(add, id, token) {
-  if (add){
-    database.run(`
+  if (add) {
+    database.run(
+      `
     INSERT INTO sessions (id, token) VALUES (?,?)
-    `,[id,token], function (err){
-      if (err){return false}
-      return true
-    })
+    `,
+      [id, token],
+      function (err) {
+        if (err) {
+          return false;
+        }
+        return true;
+      }
+    );
   } else {
-    database.run(`
+    database.run(
+      `
     DELETE FROM sessions WHERE id = $1
-    `,[id], function (err){
-      if (err){return false}
-      return true
-  })}
-};
+    `,
+      [id],
+      function (err) {
+        if (err) {
+          return false;
+        }
+        return true;
+      }
+    );
+  }
+}
 
 async function addUser(username, password) {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -113,13 +129,13 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/account", (req, res) => {
-  const auth = req.headers['auth']
-  const token = auth && auth.split(' ')[1];
-  const successful=authenticate(token)
+  const auth = req.headers["auth"];
+  const token = auth && auth.split(" ")[1];
+  const successful = authenticate(token);
   if (!successful) {
     res.sendFile(path.join(__dirname, "public", "notloged.html"));
   } else {
-   res.sendFile(path.join(__dirname, "public", "account.html")); 
+    res.sendFile(path.join(__dirname, "public", "account.html"));
   }
 });
 
@@ -144,10 +160,11 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).send("Invalid password");
     }
-    const token = jwt.sign({user.id},jwttoken,{exp:"15m"});
-    const updatetoken = jwt.sign({user.id},jwttoken,{exp:"3d"});
-    addremove(true,user.id, updatetoken)
-    res.status(200).json({ success: true, jwt: token, updjwt: updatetoken});
+    const id = user.id;
+    const token = jwt.sign({ id }, jwttoken, { exp: "15m" });
+    const updatetoken = jwt.sign({ id }, jwttoken, { exp: "3d" });
+    addremove(true, id, updatetoken);
+    res.status(200).json({ success: true, jwt: token, updjwt: updatetoken });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).send("Internal server error");
@@ -169,9 +186,9 @@ app.post("/signup", async (req, res) => {
 
     const userId = await addUser(username, password);
 
-      const token = jwt.sign({ user.id }, jwttoken, { exp: "15m" });
-    const updatetoken = jwt.sign({ user.id }, jwttoken, { exp: "3d" });
-    addremove(true, user.id, updatetoken)
+    const token = jwt.sign({ userId }, jwttoken, { exp: "15m" });
+    const updatetoken = jwt.sign({ userId }, jwttoken, { exp: "3d" });
+    addremove(true, userId, updatetoken);
     res.status(200).json({ success: true, jwt: token, updjwt: updatetoken });
   } catch (err) {
     console.error("Signup error:", err);
