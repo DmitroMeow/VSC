@@ -210,7 +210,7 @@
         async function getWeather() {
           try {
             const response = await fetch("/weather", {
-              method: "POST",
+              method: "GET",
               headers: {
                 "Content-Type": "application/json",
               },

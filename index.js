@@ -1,11 +1,15 @@
 const express = require("express");
+require("dotenv").config();
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcrypt");
 const path = require("path");
 const app = express();
 const port = process.env.PORT || 3000;
 const jwt = require("jsonwebtoken");
-const jwttoken = "12345678";
+const jwttoken = process.env.jwttoken;
+const cookieParser = require("cookie-parser");
+const { decode } = require("punycode");
+app.use(cookieParser());
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) {
@@ -26,7 +30,6 @@ CREATE TABLE IF NOT EXISTS sessions (
   token TEXT NOT NULL
 )
 `);
-
 // User functions
 async function getUser(username) {
   return new Promise((resolve, reject) => {
@@ -41,44 +44,60 @@ async function getUser(username) {
   });
 }
 
-async function authenticate(token) {
-  jwt.verify(token, jwttoken, (err, id) => {
-    if (err) {
-      return false;
-    }
-    return id;
-  });
+function authenticate(token) {
+  try {
+    return jwt.verify(token, jwttoken);
+  } catch (err) {
+    return false;
+  }
 }
 
 async function addremove(add, id, token) {
-  if (add) {
-    database.run(
-      `
-    INSERT INTO sessions (id, token) VALUES (?,?)
-    `,
-      [id, token],
-      function (err) {
-        if (err) {
-          return false;
-        }
-        return true;
-      }
-    );
-  } else {
-    database.run(
-      `
-    DELETE FROM sessions WHERE id = $1
-    `,
-      [id],
-      function (err) {
-        if (err) {
-          return false;
-        }
-        return true;
-      }
-    );
-  }
+  return new Promise((resolve, reject) => {
+    if (add) {
+      // Remove any existing session for the same id
+      database.run("DELETE FROM sessions WHERE id = ?", [id], function (err) {
+        if (err) return reject(err);
+
+        // Insert the new session
+        database.run(
+          "INSERT INTO sessions (id, token) VALUES (?, ?)",
+          [id, token],
+          function (err) {
+            if (err) return reject(err);
+            console.log("Session added");
+            resolve(true);
+          }
+        );
+      });
+    } else {
+      // Remove the session
+      database.run("DELETE FROM sessions WHERE id = ?", [id], function (err) {
+        if (err) return reject(err);
+        console.log("Session removed");
+        resolve(true);
+      });
+    }
+  });
 }
+
+// async function UpdateJWT(req) {
+//   return new Promise((resolve, reject) => {
+//     const token = req.cookies.dmitromeowwebjwt; // Read the cookie
+//     const refreshToken = req.cookies.dmitromeowwebjwtupd; // Read the cookie
+//     if (!token || !refreshToken) return false;
+//     const decoded = authenticate(token);
+//     if (!decoded || !decoded.id) return resolve(false);
+//     database.get(
+//       "SELECT 1 FROM sessions WHERE id = ? AND token = ?",
+//       [decoded.id, refreshToken],
+//       (err, row) => {
+//         if (err) return reject(err);
+
+//       }
+//     );
+//   });
+// }
 
 async function addUser(username, password) {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -96,20 +115,24 @@ async function addUser(username, password) {
 
 // Weather API
 let weatherData = { current: {} };
+let lastWeatherUpdate = 0;
 
 async function fetchWeather() {
   try {
-    const response = await fetch(
-      "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no"
-    );
-    weatherData = await response.json();
+    if (Date.now() - lastWeatherUpdate < 180000) return; // 3 minute cache
+
+    const response = await fetch(process.env.weatherapi);
+    if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
+
+    const data = await response.json();
+    if (!data || !data.current) throw new Error("Invalid weather data");
+
+    weatherData = data;
+    lastWeatherUpdate = Date.now();
   } catch (error) {
     console.error("Error fetching weather data:", error);
   }
 }
-
-fetchWeather();
-setInterval(fetchWeather, 1000 * 60 * 3);
 
 // Middleware
 app.use(express.json());
@@ -129,18 +152,41 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/account", (req, res) => {
-  const auth = req.headers["auth"];
-  const token = auth && auth.split(" ")[1];
-  const successful = authenticate(token);
-  if (!successful) {
-    res.sendFile(path.join(__dirname, "public", "notloged.html"));
-  } else {
-    res.sendFile(path.join(__dirname, "public", "account.html"));
+  res.sendFile(path.join(__dirname, "public", "account.html"));
+});
+
+app.get("/weather", (req, res) => {
+  fetchWeather();
+  res.send(weatherData.current);
+});
+
+app.get("/admin_check-database", (req, res) => {
+  const token = req.cookies.dmitromeowwebjwt; // Read the cookie
+  if (!token) {
+    return res.status(401).send("Heyy!! YOU ARE NOT AUTHORIZED TO DO THIS!!");
+  }
+  const decoded = authenticate(token); // Verify the token
+  if (!decoded) {
+    return res.status(401).send("Token outdated");
+  }
+  if (decoded.userId === 1) {
+    database.all(`SELECT username, id FROM users`, (err, rows) => {
+      res.send(JSON.stringify(rows));
+    });
   }
 });
 
-app.post("/weather", (req, res) => {
-  res.json(weatherData.current);
+app.get("/admin_check-database", (req, res) => {});
+app.get("/token", (req, res) => {
+  const token = req.cookies.dmitromeowwebjwt; // Read the cookie
+  if (!token) {
+    return res.status(401).send("No token");
+  }
+  const decoded = authenticate(token); // Verify the token
+  if (!decoded) {
+    return res.status(401).send("Token outdated");
+  }
+  res.send(`Token alive`);
 });
 
 app.post("/login", async (req, res) => {
@@ -160,11 +206,24 @@ app.post("/login", async (req, res) => {
     if (!isPasswordValid) {
       return res.status(401).send("Invalid password");
     }
-    const id = user.id;
-    const token = jwt.sign({ id }, jwttoken, { exp: "15m" });
-    const updatetoken = jwt.sign({ id }, jwttoken, { exp: "3d" });
-    addremove(true, id, updatetoken);
-    res.status(200).json({ success: true, jwt: token, updjwt: updatetoken });
+    const userId = user.id;
+
+    const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+    res.cookie("dmitromeowwebjwt", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 15,
+      sameSite: "Strict",
+    });
+    res.cookie("dmitromeowwebjwtupd", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 3,
+      sameSite: "Strict",
+    });
+    await addremove(true, userId, updatetoken);
+    res.status(200).json("Successfully logined up");
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).send("Internal server error");
@@ -175,10 +234,15 @@ app.post("/signup", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).send("Username and password are required");
+    if (!username || typeof username !== "string") {
+      return res.status(400).send("Invalid username");
     }
-
+    if (!/^[a-zA-Z0-9]+$/.test(username)) {
+      return res.status(400).send("Username must be alphanumeric");
+    }
+    if (!password || password.length < 8) {
+      return res.status(400).send("Password must be 8+ chars");
+    }
     const existingUser = await getUser(username);
     if (existingUser) {
       return res.status(409).send("Username already exists");
@@ -186,10 +250,22 @@ app.post("/signup", async (req, res) => {
 
     const userId = await addUser(username, password);
 
-    const token = jwt.sign({ userId }, jwttoken, { exp: "15m" });
-    const updatetoken = jwt.sign({ userId }, jwttoken, { exp: "3d" });
-    addremove(true, userId, updatetoken);
-    res.status(200).json({ success: true, jwt: token, updjwt: updatetoken });
+    const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+    res.cookie("dmitromeowwebjwt", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 15,
+      sameSite: "Strict",
+    });
+    res.cookie("dmitromeowwebjwtupd", token, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 3,
+      sameSite: "Strict",
+    });
+    await addremove(true, userId, updatetoken);
+    res.status(200).json("Successfully signed up");
   } catch (err) {
     console.error("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
