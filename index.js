@@ -220,10 +220,10 @@ app.get("/account", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "account.html"));
 });
 
-app.get("/weather", (req, res) => {
-  fetchWeather();
-  res.send(weatherData.current);
-});
+//app.get("/weather", (req, res) => {
+//  fetchWeather();
+//  res.send(weatherData.current);
+//});
 
 app.get("/admin_check-database", (req, res) => {
   const token = check(req); // Read the cookie
