@@ -8,7 +8,6 @@ const port = process.env.PORT || 3000;
 const jwt = require("jsonwebtoken");
 const jwttoken = process.env.jwttoken;
 const cookieParser = require("cookie-parser");
-const { decode } = require("punycode");
 app.use(cookieParser());
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
@@ -44,12 +43,18 @@ async function getUser(username) {
   });
 }
 
-function authenticate(token) {
+async function authenticate(token) {
   try {
     return jwt.verify(token, jwttoken);
   } catch (err) {
     return false;
   }
+}
+
+async function check(req) {
+  const token = req.cookies.dmitromeowwebjwt;
+  if (!token) return false;
+  return authenticate(token);
 }
 
 async function addremove(add, id, token) {
@@ -81,23 +86,37 @@ async function addremove(add, id, token) {
   });
 }
 
-// async function UpdateJWT(req) {
-//   return new Promise((resolve, reject) => {
-//     const token = req.cookies.dmitromeowwebjwt; // Read the cookie
-//     const refreshToken = req.cookies.dmitromeowwebjwtupd; // Read the cookie
-//     if (!token || !refreshToken) return false;
-//     const decoded = authenticate(token);
-//     if (!decoded || !decoded.id) return resolve(false);
-//     database.get(
-//       "SELECT 1 FROM sessions WHERE id = ? AND token = ?",
-//       [decoded.id, refreshToken],
-//       (err, row) => {
-//         if (err) return reject(err);
-
-//       }
-//     );
-//   });
-// }
+async function UpdateJWT(req) {
+  return new Promise((resolve, reject) => {
+    if (!check(req)) {
+      const updatetoken = req.cookies.dmitromeowwebjwtupd;
+      if (!updatetoken) return reject(false);
+      const decoded = authenticate(updatetoken);
+      if (!decoded) return reject(false);
+      const userId = decoded.userId;
+      database.get(
+        "SELECT * FROM sessions WHERE id = ?",
+        [userId],
+        (err, row) => {
+          if (err) return reject(err);
+          if (!row) return reject(false); // Session not found
+          const updjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+          const jwt = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
+          // Update the session with the new token
+          database.run(
+            "UPDATE sessions SET token = ? WHERE id = ?",
+            [updjwt, userId],
+            function (err) {
+              if (err) return reject(err);
+              resolve(updjwt, jwt);
+            }
+          );
+        }
+      );
+    }
+    reject(false);
+  });
+}
 
 async function addUser(username, password) {
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -140,18 +159,64 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 app.get("/", (req, res) => {
+  const logged = check(req);
+  const { updjwt, jwt } = UpdateJWT(req);
+  if (updjwt) {
+    res.cookie("dmitromeowwebjwtupd", updjwt, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 3,
+      sameSite: "Strict",
+    });
+    res.cookie("dmitromeowwebjwt", jwt, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 15,
+      sameSite: "Strict",
+    });
+  }
+  if (!logged) {
+    res.sendFile(path.join(__dirname, "public", "signup.html"));
+  }
   res.sendFile(path.join(__dirname, "public", "browser.html"));
 });
 
 app.get("/signup", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "signup.html"));
+  const logged = check(req);
+  if (!logged) {
+    res.sendFile(path.join(__dirname, "public", "signup.html"));
+  }
+  res.redirect("/account");
 });
 
 app.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  const logged = check(req);
+  if (!logged) {
+    res.sendFile(path.join(__dirname, "public", "login.html"));
+  }
+  res.redirect("/account");
 });
 
 app.get("/account", (req, res) => {
+  const logged = check(req);
+  const { updjwt, jwt } = UpdateJWT(req);
+  if (updjwt) {
+    res.cookie("dmitromeowwebjwtupd", updjwt, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 60 * 24 * 3,
+      sameSite: "Strict",
+    });
+    res.cookie("dmitromeowwebjwt", jwt, {
+      httpOnly: true,
+      secure: true,
+      maxAge: 1000 * 60 * 15,
+      sameSite: "Strict",
+    });
+  }
+  if (!logged) {
+    res.sendFile(path.join(__dirname, "public", "signup.html"));
+  }
   res.sendFile(path.join(__dirname, "public", "account.html"));
 });
 
@@ -161,32 +226,31 @@ app.get("/weather", (req, res) => {
 });
 
 app.get("/admin_check-database", (req, res) => {
-  const token = req.cookies.dmitromeowwebjwt; // Read the cookie
+  const token = check(req); // Read the cookie
   if (!token) {
     return res.status(401).send("Heyy!! YOU ARE NOT AUTHORIZED TO DO THIS!!");
   }
-  const decoded = authenticate(token); // Verify the token
-  if (!decoded) {
+  if (!token) {
     return res.status(401).send("Token outdated");
   }
-  if (decoded.userId === 1) {
+  if (token.userId === 1) {
     database.all(`SELECT username, id FROM users`, (err, rows) => {
       res.send(JSON.stringify(rows));
     });
   }
 });
 
-app.get("/admin_check-database", (req, res) => {});
 app.get("/token", (req, res) => {
-  const token = req.cookies.dmitromeowwebjwt; // Read the cookie
+  const token = check(req); // Read the cookie
   if (!token) {
     return res.status(401).send("No token");
   }
-  const decoded = authenticate(token); // Verify the token
-  if (!decoded) {
+  if (!token) {
     return res.status(401).send("Token outdated");
   }
-  res.send(`Token alive`);
+  if (token.userId === 1) {
+    return res.status(200).send("Token is valid");
+  }
 });
 
 app.post("/login", async (req, res) => {
@@ -216,7 +280,7 @@ app.post("/login", async (req, res) => {
       maxAge: 1000 * 60 * 15,
       sameSite: "Strict",
     });
-    res.cookie("dmitromeowwebjwtupd", token, {
+    res.cookie("dmitromeowwebjwtupd", updatetoken, {
       httpOnly: true,
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 3,
@@ -258,7 +322,7 @@ app.post("/signup", async (req, res) => {
       maxAge: 1000 * 60 * 15,
       sameSite: "Strict",
     });
-    res.cookie("dmitromeowwebjwtupd", token, {
+    res.cookie("dmitromeowwebjwtupd", updatetoken, {
       httpOnly: true,
       secure: true,
       maxAge: 1000 * 60 * 60 * 24 * 3,
