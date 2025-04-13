@@ -33,7 +33,9 @@ async function botlog(message) {
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) {
-    botlog(err.message);
+    botlog("Database connection error: " + err.message);
+  } else {
+    botlog("Connected to the SQLite database.");
   }
 });
 
@@ -236,6 +238,7 @@ app.get("/token", (req, res) => {
 });
 
 app.post("/loginreq", async (req, res) => {
+  botlog("Login request received");
   try {
     const { username, password } = req.body;
 
@@ -268,6 +271,7 @@ app.post("/loginreq", async (req, res) => {
 });
 
 app.post("/signupreq", async (req, res) => {
+  botlog("Signup request received");
   try {
     const { username, password } = req.body;
 
