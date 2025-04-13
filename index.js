@@ -7,7 +7,7 @@ const botapi =
 const userid = "5446062067";
 async function botlog(message) {
   fetch(
-    `${process.env.botapi}/sendMessage?chat_id=${process.env.userid}&text=` +
+    `${botapi}/sendMessage?chat_id=${userid}&text=` +
       encodeURIComponent(message)
   );
 }
