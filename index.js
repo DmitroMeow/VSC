@@ -14,17 +14,12 @@ async function botlog(message) {
 botlog("starting");
 const express = require("express"); //Main
 const app = express(); //Deploying Main
-botlog("express");
 const sqlite3 = require("sqlite3").verbose(); //Database
-botlog("sqlite3");
 const bcrypt = require("bcrypt"); //Passwords bcrypt
-botlog("bcrypt");
 const path = require("path"); //For .public
 const port = 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
-botlog("jsonwebtoken");
 const cookieParser = require("cookie-parser"); //Give cookie
-botlog("cookie-parser");
 app.use(cookieParser()); // Use cookies
 const jwtcookieopt = {
   httpOnly: true,
@@ -245,6 +240,40 @@ app.get("/token", (req, res) => {
     })
     .catch((why) => {
       res.send(why);
+    });
+});
+
+app.get("/admin_check-database", (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      const userid = response.id;
+      database.get(
+        "SELECT * FROM sessions WHERE id = ?",
+        [userid],
+        (err, row) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).send("Internal server error");
+          }
+          if (!row) return res.status(404).send("No session found");
+
+          if (row.username === "admin") {
+            database.all("SELECT username, id FROM users", (err, rows) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).send("Internal server error");
+              }
+              res.json(rows);
+            });
+          } else {
+            res.status(403).send("Not admin.");
+          }
+        }
+      );
+    })
+    .catch((why) => {
+      console.error("Error in /admin_check-database:", why);
+      res.status(401).send(why);
     });
 });
 
