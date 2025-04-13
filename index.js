@@ -1,13 +1,25 @@
+require("dotenv").config(); //.env
+async function botlog(message) {
+  fetch(
+    `${process.env.botapi}/sendMessage?chat_id=${process.env.userid}&text=` +
+      encodeURIComponent(message)
+  );
+}
+botlog("dotenv, starting");
 const express = require("express"); //Main
 const app = express(); //Deploying Main
-require("dotenv").config(); //.env
+botlog("express");
 const sqlite3 = require("sqlite3").verbose(); //Database
+botlog("sqlite3");
 const bcrypt = require("bcrypt"); //Passwords bcrypt
+botlog("bcrypt");
 const path = require("path"); //For .public
 const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
+botlog("jsonwebtoken");
 const jwttoken = process.env.jwttoken; //Specical key
 const cookieParser = require("cookie-parser"); //Give cookie
+botlog("cookie-parser");
 app.use(cookieParser()); // Use cookies
 const jwtcookieopt = {
   httpOnly: true,
@@ -23,12 +35,6 @@ const updjwtcookieopt = {
 };
 
 // enabling logs because im not seeing them in the console
-async function botlog(message) {
-  fetch(
-    `${process.env.botapi}/sendMessage?chat_id=${process.env.userid}&text=` +
-      encodeURIComponent(message)
-  );
-}
 
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
