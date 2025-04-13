@@ -1,5 +1,5 @@
 const weatherapi =
-  "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no";
+  "http://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=Brovary&aqi=no";
 const jwttoken =
   "0761c3557ebe859ae2b10044fc49441e01b2838afe4e8a4e6cb92b9c52d5b5efb20723c9e9c9d37790871f7361ef09d19439b2d721a565890ce30bb84ee5b5ea";
 const botapi =
