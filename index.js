@@ -221,40 +221,6 @@ app.get("/weather", (req, res) => {
   });
 });
 
-app.get("/admin_check-database", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      const userid = response.id;
-      database.get(
-        "SELECT * FROM sessions WHERE id = ?",
-        [userid],
-        (err, row) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res.status(500).send("Internal server error");
-          }
-          if (!row) return res.status(404).send("No session found");
-
-          if (row.username === "admin") {
-            database.all("SELECT username, id FROM users", (err, rows) => {
-              if (err) {
-                console.error("Database error:", err);
-                return res.status(500).send("Internal server error");
-              }
-              res.json(rows);
-            });
-          } else {
-            res.status(403).send("Not admin.");
-          }
-        }
-      );
-    })
-    .catch((why) => {
-      console.error("Error in /admin_check-database:", why);
-      res.status(401).send(why);
-    });
-});
-
 app.get("/token", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
