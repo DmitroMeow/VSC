@@ -1,4 +1,10 @@
-require("dotenv").config(); //.env
+const weatherapi =
+  "http://api.weatherapi.com/v1/current.json?key=c2fca2c38b884246bc2104149252303&q=Brovary&aqi=no";
+const jwttoken =
+  "0761c3557ebe859ae2b10044fc49441e01b2838afe4e8a4e6cb92b9c52d5b5efb20723c9e9c9d37790871f7361ef09d19439b2d721a565890ce30bb84ee5b5ea";
+const botapi =
+  "https://api.telegram.org/bot7699637389:AAEOeNtVrdTLSqv6VhK-eoZV5K7UZ4fpET0";
+const userid = "5446062067";
 async function botlog(message) {
   fetch(
     `${process.env.botapi}/sendMessage?chat_id=${process.env.userid}&text=` +
@@ -17,7 +23,6 @@ const path = require("path"); //For .public
 const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 botlog("jsonwebtoken");
-const jwttoken = process.env.jwttoken; //Specical key
 const cookieParser = require("cookie-parser"); //Give cookie
 botlog("cookie-parser");
 app.use(cookieParser()); // Use cookies
