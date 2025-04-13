@@ -11,7 +11,7 @@ async function botlog(message) {
       encodeURIComponent(message)
   );
 }
-botlog("dotenv, starting");
+botlog("starting");
 const express = require("express"); //Main
 const app = express(); //Deploying Main
 botlog("express");
@@ -20,7 +20,7 @@ botlog("sqlite3");
 const bcrypt = require("bcrypt"); //Passwords bcrypt
 botlog("bcrypt");
 const path = require("path"); //For .public
-const port = process.env.PORT || 3000; //Port
+const port = 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 botlog("jsonwebtoken");
 const cookieParser = require("cookie-parser"); //Give cookie
@@ -162,7 +162,7 @@ async function fetchWeather() {
   try {
     if (Date.now() - lastWeatherUpdate < 180000) return true; // 3 minute cache
 
-    const response = await fetch(process.env.weatherapi);
+    const response = await fetch(weatherapi);
     if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
 
     const data = await response.json();
