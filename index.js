@@ -21,10 +21,19 @@ const updjwtcookieopt = {
   maxAge: 1000 * 60 * 15,
   sameSite: "Strict",
 };
+
+// enabling logs because im not seeing them in the console
+async function botlog(message) {
+  fetch(
+    `${process.env.botapi}/sendMessage?chat_id=${process.env.userid}&text=` +
+      encodeURIComponent(message)
+  );
+}
+
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) {
-    console.error(err.message);
+    botlog(err.message);
   }
 });
 
@@ -92,7 +101,6 @@ async function addsession(id, token) {
         [id, token],
         function (err) {
           if (err) return reject(err);
-          console.log("Session added");
           resolve(true);
         }
       );
@@ -103,32 +111,34 @@ async function addsession(id, token) {
 function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
     const token = req.cookies.dmitromeowwebjwt;
-    if (token) return authenticate(token);
-    if (!token) {
-      const updatetoken = req.cookies.dmitromeowwebjwtupd;
-      if (!updatetoken) return reject("No update token");
-      const decoded = authenticate(updatetoken);
-      if (!decoded) return reject("Token outdated");
-      const userId = decoded.userId;
-      database.get(
-        "SELECT * FROM sessions WHERE id = ?",
-        [userId],
-        (err, row) => {
-          if (err) return reject(err);
-          if (!row) return reject("Session not exists");
-          const updjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
-          const newjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
-          database.run(
-            "UPDATE sessions SET token = ? WHERE id = ?",
-            [updjwt, userId],
-            function (err) {
-              if (err) return reject("Update session went wrong");
-              resolve({ jwt: jwt, updjwt: updjwt });
-            }
-          );
-        }
-      );
+    if (token) {
+      authenticate(token).then((dcd) => {
+        return resolve(dcd);
+      });
     }
+    const updatetoken = req.cookies.dmitromeowwebjwtupd;
+    if (!updatetoken) return reject("No update token");
+    const decoded = authenticate(updatetoken);
+    if (!decoded) return reject("Token outdated");
+    const userId = decoded.userId;
+    database.get(
+      "SELECT * FROM sessions WHERE id = ?",
+      [userId],
+      (err, row) => {
+        if (err) return reject(err);
+        if (!row) return reject("Session not exists");
+        const updjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+        const newjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
+        database.run(
+          "UPDATE sessions SET token = ? WHERE id = ?",
+          [updjwt, userId],
+          function (err) {
+            if (err) return reject("Update session went wrong");
+            resolve({ jwt: jwt, updjwt: updjwt });
+          }
+        );
+      }
+    );
   });
 }
 // Weather API
@@ -148,7 +158,7 @@ async function fetchWeather() {
     weatherData = data;
     lastWeatherUpdate = Date.now();
   } catch (error) {
-    console.error("Error fetching weather data:", error);
+    botlog("Error fetching weather data:", error);
   }
 }
 
@@ -160,11 +170,11 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      res.sendFile(path.join(__dirname, "public", "browser.html"));
       if (response.jwt && response.updjwt) {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
+      res.sendFile(path.join(__dirname, "public", "browser.html"));
     })
     .catch((why) => {
       res.redirect("/login");
@@ -174,11 +184,11 @@ app.get("/", (req, res) => {
 app.get("/account", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      res.sendFile(path.join(__dirname, "public", "account.html"));
       if (response.jwt && response.updjwt) {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
+      res.sendFile(path.join(__dirname, "public", "account.html"));
     })
     .catch((why) => {
       res.redirect("/login");
@@ -214,42 +224,52 @@ app.get("/weather", (req, res) => {
 app.get("/admin_check-database", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      if (!response.jwt && !response.updjwt) {
-        const userid = response.id;
-        database.run(`SELECT * WHERE id = ?`, [userid], (err, row) => {
-          if (err) return err;
-          if (!row) return "No row";
+      const userid = response.id;
+      database.get(
+        "SELECT * FROM sessions WHERE id = ?",
+        [userid],
+        (err, row) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res.status(500).send("Internal server error");
+          }
+          if (!row) return res.status(404).send("No session found");
+
           if (row.username === "admin") {
-            database.all(`SELECT username, id FROM users`, (err, rows) => {
-              if (err) return err;
-              res.send(JSON.stringify(rows));
+            database.all("SELECT username, id FROM users", (err, rows) => {
+              if (err) {
+                console.error("Database error:", err);
+                return res.status(500).send("Internal server error");
+              }
+              res.json(rows);
             });
           } else {
-            res.send("Not admin.");
+            res.status(403).send("Not admin.");
           }
-        });
-      }
+        }
+      );
     })
     .catch((why) => {
-      res.send(why);
+      console.error("Error in /admin_check-database:", why);
+      res.status(401).send(why);
     });
 });
 
 app.get("/token", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      res.send("TOKEN_ACTIVE");
       if (response.jwt && response.updjwt) {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
+      res.send("TOKEN_ACTIVE");
     })
     .catch((why) => {
       res.send(why);
     });
 });
 
-app.post("/login", async (req, res) => {
+app.post("/loginreq", async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -276,12 +296,12 @@ app.post("/login", async (req, res) => {
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully logined up");
   } catch (err) {
-    console.error("Login error:", err);
+    botlog("Login error:", err);
     res.status(500).send("Internal server error");
   }
 });
 
-app.post("/signup", async (req, res) => {
+app.post("/signupreq", async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -308,7 +328,7 @@ app.post("/signup", async (req, res) => {
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully signed up");
   } catch (err) {
-    console.error("Signup error:", err);
+    botlog("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
   }
 });
