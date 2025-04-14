@@ -118,13 +118,13 @@ async function addsession(id, token) {
 
 function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
-    const token = req.cookies.dmitromeowwebjwt;
+    const token = req.cookies.dmeow_access;
     if (token) {
       authenticate(token).then((dcd) => {
         return resolve(dcd);
       });
     }
-    const updatetoken = req.cookies.dmitromeowwebjwtupd;
+    const updatetoken = req.cookies.dmeow_upd;
     if (!updatetoken) return reject("No update token");
     const decoded = authenticate(updatetoken);
     if (!decoded) return reject("Token outdated");
