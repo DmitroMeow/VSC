@@ -300,8 +300,8 @@ app.post("/loginreq", async (req, res) => {
     const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
     const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
 
-    res.cookie("dmitromeowwebjwt", token, jwtcookieopt);
-    res.cookie("dmitromeowwebjwtupd", updatetoken, updjwtcookieopt);
+    res.cookie("dmeow_access", token, jwtcookieopt);
+    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully logined up");
   } catch (err) {
@@ -333,8 +333,8 @@ app.post("/signupreq", async (req, res) => {
 
     const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
     const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
-    res.cookie("dmitromeowwebjwt", token, jwtcookieopt);
-    res.cookie("dmitromeowwebjwtupd", updatetoken, updjwtcookieopt);
+    res.cookie("dmeow_access", token, jwtcookieopt);
+    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully signed up");
   } catch (err) {
