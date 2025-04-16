@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DmitroMeow</title>
+    <link rel="icon" type="image/png" href="icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <link rel="stylesheet" href="/joinus/styles.css" />
+  <body>
+    <form action="submit">
+      <h1>Log in</h1>
+      <fieldset id="namefield">
+        <legend>Username</legend>
+        <input type="text" id="name" name="name" />
+      </fieldset>
+      <fieldset id="passfield">
+        <legend>Password</legend>
+        <input type="password" id="password" name="password" />
+      </fieldset>
+      <button type="submit"><b>Log in</b></button>
+      <p id="login">Dont have an account? <a href="/signup">Sign up</a></p>
+    </form>
+    <script>
+      const form = document.querySelector("form");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault(); // Prevent the default form submission
+        const username = document.getElementById("name").value;
+        const password = document.getElementById("password").value;
+        if (!username) {
+          document.getElementById("namefield").style.border = "3px solid red"; // Highlight the field in red
+        } else if (!password) {
+          document.getElementById("passfield").style.border = "3px solid red"; // Highlight the field in red
+        } else {
+          document.getElementById("namefield").style.border =
+            "3px solid rgb(0, 106, 255)";
+          document.getElementById("passfield").style.border =
+            "3px solid rgb(0, 106, 255)";
+          try {
+            const response = await fetch("/loginreq", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ username, password }),
+            });
+            const successful = response.ok;
+            const responseText = await response.text();
+            if (successful) {
+              window.location = "/account";
+            } else {
+              document.querySelector("h1").innerHTML = "Err: " + responseText;
+              document.querySelector("h1").style.color = "red";
+            }
+          } catch (error) {
+            console.error("Error:", error);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

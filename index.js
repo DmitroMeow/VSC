@@ -209,7 +209,7 @@ app.get("/signup", (req, res) => {
       res.redirect("/account");
     })
     .catch((why) => {
-      res.sendFile(path.join(__dirname, "public", "signup.html"));
+      res.sendFile(path.join(__dirname, "public", "joinus", "signup.html"));
     });
 });
 
@@ -219,7 +219,7 @@ app.get("/login", (req, res) => {
       res.redirect("/account");
     })
     .catch((why) => {
-      res.sendFile(path.join(__dirname, "public", "login.html"));
+      res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
     });
 });
 
@@ -246,6 +246,8 @@ app.get("/token", (req, res) => {
 app.get("/admin_check-database", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
+      if (response.jwt && response.updjwt)
+        return res.status(401).send("No token");
       const userid = response.id;
       database.get(
         "SELECT * FROM sessions WHERE id = ?",
@@ -256,7 +258,6 @@ app.get("/admin_check-database", (req, res) => {
             return res.status(500).send("Internal server error");
           }
           if (!row) return res.status(404).send("No session found");
-
           if (row.username === "admin") {
             database.all("SELECT username, id FROM users", (err, rows) => {
               if (err) {
@@ -278,7 +279,6 @@ app.get("/admin_check-database", (req, res) => {
 });
 
 app.post("/loginreq", async (req, res) => {
-  botlog("Login request received");
   try {
     const { username, password } = req.body;
 
@@ -311,7 +311,6 @@ app.post("/loginreq", async (req, res) => {
 });
 
 app.post("/signupreq", async (req, res) => {
-  botlog("Signup request received");
   try {
     const { username, password } = req.body;
 
@@ -335,8 +334,9 @@ app.post("/signupreq", async (req, res) => {
     const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
     res.cookie("dmitromeowwebjwt", token, jwtcookieopt);
     res.cookie("dmitromeowwebjwtupd", updatetoken, updjwtcookieopt);
-    await addsession(userId, updatetoken);
-    res.status(200).send("Successfully signed up");
+    addsession(userId, updatetoken).then(() => {
+      return res.status(200).send("Successfully signed up");
+    });
   } catch (err) {
     botlog("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
