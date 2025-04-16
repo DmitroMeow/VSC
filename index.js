@@ -118,13 +118,13 @@ async function addsession(id, token) {
 
 function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
-    const token = req.cookies.dmitromeowwebjwt;
+    const token = req.cookies.dmeow_access;
     if (token) {
       authenticate(token).then((dcd) => {
         return resolve(dcd);
       });
     }
-    const updatetoken = req.cookies.dmitromeowwebjwtupd;
+    const updatetoken = req.cookies.dmeow_upd;
     if (!updatetoken) return reject("No update token");
     const decoded = authenticate(updatetoken);
     if (!decoded) return reject("Token outdated");
@@ -243,34 +243,16 @@ app.get("/token", (req, res) => {
     });
 });
 
-app.get("/admin_check-database", (req, res) => {
+app.get("/check-database", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      if (response.jwt && response.updjwt)
-        return res.status(401).send("No token");
-      const userid = response.id;
-      database.get(
-        "SELECT * FROM sessions WHERE id = ?",
-        [userid],
-        (err, row) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res.status(500).send("Internal server error");
-          }
-          if (!row) return res.status(404).send("No session found");
-          if (row.username === "admin") {
-            database.all("SELECT username, id FROM users", (err, rows) => {
-              if (err) {
-                console.error("Database error:", err);
-                return res.status(500).send("Internal server error");
-              }
-              res.json(rows);
-            });
-          } else {
-            res.status(403).send("Not admin.");
-          }
+      database.all("SELECT username, id FROM users", (err, rows) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).send("Internal server error");
         }
-      );
+        res.json(rows);
+      });
     })
     .catch((why) => {
       console.error("Error in /admin_check-database:", why);
@@ -300,8 +282,8 @@ app.post("/loginreq", async (req, res) => {
     const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
     const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
 
-    res.cookie("dmitromeowwebjwt", token, jwtcookieopt);
-    res.cookie("dmitromeowwebjwtupd", updatetoken, updjwtcookieopt);
+    res.cookie("dmeow_access", token, jwtcookieopt);
+    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully logined up");
   } catch (err) {
@@ -332,11 +314,10 @@ app.post("/signupreq", async (req, res) => {
 
     const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
     const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
-    res.cookie("dmitromeowwebjwt", token, jwtcookieopt);
-    res.cookie("dmitromeowwebjwtupd", updatetoken, updjwtcookieopt);
-    addsession(userId, updatetoken).then(() => {
-      return res.status(200).send("Successfully signed up");
-    });
+    res.cookie("dmeow_access", token, jwtcookieopt);
+    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
+    await addsession(userId, updatetoken);
+    res.status(200).send("Successfully signed up");
   } catch (err) {
     botlog("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
