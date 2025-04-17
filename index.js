@@ -52,8 +52,8 @@ database.run(`
 `);
 database.run(`
 CREATE TABLE IF NOT EXISTS sessions (
-  id INTEGER PRIMARY KEY,
-  token TEXT NOT NULL
+ token TEXT PRIMARY KEY,
+  id INTEGER NOT NULL
 )
 `);
 
