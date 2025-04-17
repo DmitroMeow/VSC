@@ -97,50 +97,59 @@ async function authenticate(token) {
 
 async function addsession(id, token) {
   return new Promise((resolve, reject) => {
-    database.run(
-      "INSERT INTO sessions (id, token) VALUES (?, ?)",
-      [id, token],
-      function (err) {
-        if (err) return reject(err);
-        resolve(true);
-      }
-    );
+    database.run("DELETE FROM sessions WHERE id = ?", [id], function (err) {
+      if (err) return reject(err);
+
+      database.run(
+        "INSERT INTO sessions (id, token) VALUES (?, ?)",
+        [id, token],
+        function (err) {
+          if (err) return reject(err);
+          resolve(true);
+        }
+      );
+    });
   });
 }
 
-function CheckORUpdateJWT(req) {
+async function CheckORUpdateJWT(req) {
+  const token = req.cookies.dmeow_access;
+  if (token) {
+    const decoded = await authenticate(token);
+    if (decoded) return decoded;
+  }
+
+  const updatetoken = req.cookies.dmeow_upd;
+  if (!updatetoken) throw new Error("No update token");
+
+  const decoded = await authenticate(updatetoken);
+  if (!decoded) throw new Error("Token outdated");
+
+  const userId = decoded.id;
   return new Promise((resolve, reject) => {
-    const token = req.cookies.dmeow_access;
-    if (token) {
-      authenticate(token).then((dcd) => {
-        return resolve(dcd);
-      });
-    }
-    const updatetoken = req.cookies.dmeow_upd;
-    if (!updatetoken) return reject("No update token");
-    const decoded = authenticate(updatetoken);
-    if (!decoded) return reject("Token outdated");
-    const userId = decoded.id;
     database.get(
       "SELECT * FROM sessions WHERE id = ?",
       [userId],
       (err, row) => {
         if (err) return reject(err);
         if (!row) return reject("Session not exists");
+
         const updjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
         const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
+
         database.run(
           "UPDATE sessions SET token = ? WHERE id = ?",
           [updjwt, userId],
           function (err) {
             if (err) return reject("Update session went wrong");
-            resolve({ jwt: jwt, updjwt: updjwt });
+            resolve({ jwt: newjwt, updjwt: updjwt });
           }
         );
       }
     );
   });
 }
+
 // Weather API
 let weatherData = { current: {} };
 let lastWeatherUpdate = 0;
