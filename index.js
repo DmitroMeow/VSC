@@ -53,7 +53,7 @@ database.run(`
 database.run(`
 CREATE TABLE IF NOT EXISTS sessions (
  token TEXT PRIMARY KEY,
-  id INTEGER NOT NULL
+ id INTEGER NOT NULL
 )
 `);
 
@@ -96,21 +96,15 @@ async function authenticate(token) {
 }
 
 async function addsession(id, token) {
-  //Adding session (upd jwt)
   return new Promise((resolve, reject) => {
-    // Remove any existing session for the same id
-    database.run("DELETE FROM sessions WHERE id = ?", [id], function (err) {
-      if (err) return reject(err);
-      // Insert the new session
-      database.run(
-        "INSERT INTO sessions (id, token) VALUES (?, ?)",
-        [id, token],
-        function (err) {
-          if (err) return reject(err);
-          resolve(true);
-        }
-      );
-    });
+    database.run(
+      "INSERT INTO sessions (id, token) VALUES (?, ?)",
+      [id, token],
+      function (err) {
+        if (err) return reject(err);
+        resolve(true);
+      }
+    );
   });
 }
 
@@ -133,8 +127,8 @@ function CheckORUpdateJWT(req) {
       (err, row) => {
         if (err) return reject(err);
         if (!row) return reject("Session not exists");
-        const updjwt = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
-        const newjwt = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
+        const updjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
+        const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
         database.run(
           "UPDATE sessions SET token = ? WHERE id = ?",
           [updjwt, userId],
@@ -292,8 +286,8 @@ app.post("/loginreq", async (req, res) => {
     }
     const userId = user.id;
 
-    const token = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
+    const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
 
     res.cookie("dmeow_access", token, jwtcookieopt);
     res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
@@ -325,8 +319,8 @@ app.post("/signupreq", async (req, res) => {
 
     const userId = await addUser(username, password);
 
-    const token = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
+    const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
     res.cookie("dmeow_access", token, jwtcookieopt);
     res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
     await addsession(userId, updatetoken);
