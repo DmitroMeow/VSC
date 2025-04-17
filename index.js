@@ -126,7 +126,7 @@ function CheckORUpdateJWT(req) {
     if (!updatetoken) return reject("No update token");
     const decoded = authenticate(updatetoken);
     if (!decoded) return reject("Token outdated");
-    const userId = decoded.userId;
+    const userId = decoded;
     database.get(
       "SELECT * FROM sessions WHERE id = ?",
       [userId],
