@@ -126,15 +126,15 @@ function CheckORUpdateJWT(req) {
     if (!updatetoken) return reject("No update token");
     const decoded = authenticate(updatetoken);
     if (!decoded) return reject("Token outdated");
-    const userId = decoded;
+    const userId = decoded.id;
     database.get(
       "SELECT * FROM sessions WHERE id = ?",
       [userId],
       (err, row) => {
         if (err) return reject(err);
         if (!row) return reject("Session not exists");
-        const updjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
-        const newjwt = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
+        const updjwt = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
+        const newjwt = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
         database.run(
           "UPDATE sessions SET token = ? WHERE id = ?",
           [updjwt, userId],
@@ -276,8 +276,8 @@ app.post("/loginreq", async (req, res) => {
     }
     const userId = user.id;
 
-    const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+    const token = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
 
     res.cookie("dmeow_access", token, jwtcookieopt);
     res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
@@ -309,8 +309,8 @@ app.post("/signupreq", async (req, res) => {
 
     const userId = await addUser(username, password);
 
-    const token = jwt.sign({ userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ userId }, jwttoken, { expiresIn: "3d" });
+    const token = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "15m" });
+    const updatetoken = jwt.sign({ "id": userId }, jwttoken, { expiresIn: "3d" });
     res.cookie("dmeow_access", token, jwtcookieopt);
     res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
     await addsession(userId, updatetoken);
