@@ -257,6 +257,22 @@ app.get("/check-database", (req, res) => {
     });
 });
 
+app.get("/check-sessions", (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      database.all("SELECT token, id FROM sessions", (err, rows) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).send("Internal server error");
+        }
+        res.json(rows);
+      });
+    })
+    .catch((why) => {
+      res.status(401).send(why);
+    });
+});
+
 app.post("/loginreq", async (req, res) => {
   try {
     const { username, password } = req.body;
