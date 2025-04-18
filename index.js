@@ -125,8 +125,8 @@ async function CheckORUpdateJWT(req) {
   const userId = decoded.id;
   return new Promise((resolve, reject) => {
     database.get(
-      "SELECT * FROM sessions WHERE userid = ?",
-      [userId],
+      "SELECT * FROM sessions WHERE token = ?",
+      [updatetoken],
       (err, row) => {
         if (err) return reject(err);
         if (!row) return reject("Session not exists");
@@ -135,8 +135,8 @@ async function CheckORUpdateJWT(req) {
         const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
 
         database.run(
-          "UPDATE sessions SET token = ? WHERE userid = ?",
-          [updjwt, userId],
+          "UPDATE sessions SET token = ? WHERE token = ?",
+          [updjwt, updatetoken],
           function (err) {
             if (err) return reject("Update session went wrong");
             resolve({ jwt: newjwt, updjwt: updjwt });
