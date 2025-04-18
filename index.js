@@ -102,7 +102,7 @@ async function addsession(id, token) {
         "INSERT INTO sessions (token, id) VALUES (?, ?)",
         [token, id],
         function (err) {
-          if (err) botlog("ads", err)
+          if (err) botlog(err.message||err)
           if (err) return reject(err);
           resolve(true);
         }
