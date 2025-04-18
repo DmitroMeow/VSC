@@ -97,18 +97,15 @@ async function authenticate(token) {
 
 async function addsession(id, token) {
   return new Promise((resolve, reject) => {
-    database.run("DELETE FROM sessions WHERE id = ?", [id], function (err) {
-      if (err) return reject(err);
-
       database.run(
-        "INSERT INTO sessions (id, token) VALUES (?, ?)",
-        [id, token],
+        "INSERT INTO sessions (token, id) VALUES (?, ?)",
+        [token, id],
         function (err) {
+          if (err) botlog("ads", err)
           if (err) return reject(err);
           resolve(true);
         }
       );
-    });
   });
 }
 
