@@ -52,9 +52,8 @@ database.run(`
 `);
 database.run(`
 CREATE TABLE IF NOT EXISTS sessions (
-num INTEGER PRIMARY KEY AUTOINCREMENT,
- token TEXT NOT NULL,
- id INTEGER NOT NULL
+ token TEXT PRIMARY KEY,
+ userid INTEGER NOT NULL
 )
 `);
 
@@ -98,15 +97,15 @@ async function authenticate(token) {
 
 async function addsession(id, token) {
   return new Promise((resolve, reject) => {
-      database.run(
-        "INSERT INTO sessions (token, id) VALUES (?, ?)",
-        [token, id],
-        function (err) {
-          if (err) botlog(err.message||err)
-          if (err) return reject(err);
-          resolve(true);
-        }
-      );
+    database.run(
+      "INSERT INTO sessions (token, userid) VALUES (?, ?)",
+      [token, id],
+      function (err) {
+        if (err) botlog(err.message || err);
+        if (err) return reject(err);
+        resolve(true);
+      }
+    );
   });
 }
 
@@ -126,7 +125,7 @@ async function CheckORUpdateJWT(req) {
   const userId = decoded.id;
   return new Promise((resolve, reject) => {
     database.get(
-      "SELECT * FROM sessions WHERE id = ?",
+      "SELECT * FROM sessions WHERE userid = ?",
       [userId],
       (err, row) => {
         if (err) return reject(err);
@@ -136,7 +135,7 @@ async function CheckORUpdateJWT(req) {
         const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
 
         database.run(
-          "UPDATE sessions SET token = ? WHERE id = ?",
+          "UPDATE sessions SET token = ? WHERE userid = ?",
           [updjwt, userId],
           function (err) {
             if (err) return reject("Update session went wrong");
@@ -261,7 +260,7 @@ app.get("/check-database", (req, res) => {
 app.get("/check-sessions", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
-      database.all("SELECT token, id FROM sessions", (err, rows) => {
+      database.all("SELECT token, userid FROM sessions", (err, rows) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).send("Internal server error");
