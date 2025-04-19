@@ -117,10 +117,16 @@ async function CheckORUpdateJWT(req) {
   }
 
   const updatetoken = req.cookies.dmeow_upd;
-  if (!updatetoken) throw new Error("No update token");
+  if (!updatetoken) {
+    botlog("fcak no upd");
+    throw new Error("No update token");
+  }
 
   const decoded = await authenticate(updatetoken);
-  if (!decoded) throw new Error("Token outdated");
+  if (!decoded) {
+    botlog("fcak no dcd");
+    throw new Error("Token outdated");
+  }
 
   const userId = decoded.id;
   return new Promise((resolve, reject) => {
