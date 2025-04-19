@@ -24,13 +24,13 @@ app.use(cookieParser()); // Use cookies
 const jwtcookieopt = {
   httpOnly: true,
   secure: true,
-  maxAge: 1000 * 60 * 60 * 24 * 3,
+  maxAge: 1000 * 60 * 15,
   sameSite: "Strict",
 };
 const updjwtcookieopt = {
   httpOnly: true,
   secure: true,
-  maxAge: 1000 * 60 * 15,
+  maxAge: 1000 * 60 * 60 * 24 * 3,
   sameSite: "Strict",
 };
 
