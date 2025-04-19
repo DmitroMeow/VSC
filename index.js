@@ -128,8 +128,14 @@ async function CheckORUpdateJWT(req) {
       "SELECT * FROM sessions WHERE userid = ?",
       [userId],
       (err, row) => {
-        if (err) return reject(err);
-        if (!row) return reject("Session not exists");
+        if (err) {
+          botlog(err.message || err);
+          return reject(err);
+        }
+        if (!row) {
+          botlog(err.message || err);
+          return reject("Session not exists");
+        }
 
         const updjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
         const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
@@ -138,7 +144,10 @@ async function CheckORUpdateJWT(req) {
           "UPDATE sessions SET token = ? WHERE userid = ?",
           [updjwt, userId],
           function (err) {
-            if (err) return reject("Update session went wrong");
+            if (err) {
+              botlog(err.message || err);
+              return reject("Update session went wrong");
+            }
             resolve({ jwt: newjwt, updjwt: updjwt });
           }
         );
