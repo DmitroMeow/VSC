@@ -134,7 +134,6 @@ async function CheckORUpdateJWT(req) {
       "SELECT * FROM sessions WHERE token = ?",
       [updatetoken],
       (err, row) => {
-        botlog(err.message || row || "good");
         if (err) {
           botlog(err.message || err);
           return reject(err);
@@ -151,7 +150,6 @@ async function CheckORUpdateJWT(req) {
           "UPDATE sessions SET token = ? WHERE token = ?",
           [updjwt, updatetoken],
           function (err) {
-            botlog(err.message || err || "good");
             if (err) {
               botlog(err.message || err);
               return reject("Update session went wrong");
