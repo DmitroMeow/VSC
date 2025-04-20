@@ -107,26 +107,19 @@ async function addsession(id, token) {
 }
 
 async function CheckORUpdateJWT(req) {
-  const token = req.cookies.dmeow_access;
-  if (token) {
-    const decoded = await authenticate(token);
-    if (decoded) return decoded;
-  }
-
-  const updatetoken = req.cookies.dmeow_upd;
-  if (!updatetoken) {
-    // botlog("fcak no upd");
-    throw new Error("No update token");
-  }
-
-  const decoded = await authenticate(updatetoken);
-  if (!decoded) {
-    // botlog("fcak no dcd");
-    throw new Error("Token outdated");
-  }
-
-  const userId = decoded.id;
   return new Promise((resolve, reject) => {
+    const token = req.cookies.dmeow_access;
+    authenticate(token).then((decoded) => {
+      if (decoded) return resolve(decoded);
+    });
+
+    const updatetoken = req.cookies.dmeow_upd;
+    if (!updatetoken) return reject("No token found");
+    authenticate(updatetoken).then((decoded) => {
+      if (!decoded) return reject("Invalid token");
+    });
+
+    const userId = decoded.id;
     database.get(
       "SELECT * FROM sessions WHERE token = ?",
       [updatetoken],
