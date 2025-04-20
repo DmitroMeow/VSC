@@ -1,5 +1,3 @@
-const weatherapi =
-  "http://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=Brovary&aqi=no";
 const jwttoken =
   "0761c3557ebe859ae2b10044fc49441e01b2838afe4e8a4e6cb92b9c52d5b5efb20723c9e9c9d37790871f7361ef09d19439b2d721a565890ce30bb84ee5b5ea";
 const botapi =
@@ -162,27 +160,6 @@ async function CheckORUpdateJWT(req) {
   });
 }
 
-// Weather API
-let weatherData = { current: {} };
-let lastWeatherUpdate = 0;
-
-async function fetchWeather() {
-  try {
-    if (Date.now() - lastWeatherUpdate < 180000) return true; // 3 minute cache
-
-    const response = await fetch(weatherapi);
-    if (!response.ok) throw new Error(`Weather API error: ${response.status}`);
-
-    const data = await response.json();
-    if (!data || !data.current) throw new Error("Invalid weather data");
-
-    weatherData = data;
-    lastWeatherUpdate = Date.now();
-  } catch (error) {
-    botlog("Error fetching weather data:", error);
-  }
-}
-
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
@@ -234,12 +211,6 @@ app.get("/login", (req, res) => {
     .catch((why) => {
       res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
     });
-});
-
-app.get("/weather", (req, res) => {
-  fetchWeather().then(() => {
-    res.send(weatherData.current);
-  });
 });
 
 app.get("/token", (req, res) => {
