@@ -9,7 +9,6 @@ async function botlog(message) {
       encodeURIComponent(message)
   );
 }
-botlog("starting");
 const express = require("express"); //Main
 const app = express(); //Deploying Main
 const sqlite3 = require("sqlite3").verbose(); //Database
@@ -32,29 +31,29 @@ const updjwtcookieopt = {
   sameSite: "Strict",
 };
 
+botlog("Things have loaded (Starting)");
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
-  if (err) {
-    botlog("Database connection error: " + err.message);
-  } else {
-    botlog("Connected to the SQLite database.");
-  }
+  if (err) botlog("Database connection error: " + err.message);
 });
 
-database.run(`
+try {
+  database.run(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )
 `);
-database.run(`
+  database.run(`
 CREATE TABLE IF NOT EXISTS sessions (
  token TEXT PRIMARY KEY,
  userid INTEGER NOT NULL
 )
 `);
-
+} catch (err) {
+  botlog("Database setup error: " + err.message);
+}
 // User functions DATABASE
 async function getUser(username) {
   return new Promise((resolve, reject) => {
@@ -159,11 +158,13 @@ async function CheckORUpdateJWT(req) {
     );
   });
 }
-
-// Middleware
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
+try {
+  // Middleware
+  app.use(express.json());
+  app.use(express.static(path.join(__dirname, "public")));
+} catch (err) {
+  botlog("Middleware error: " + err.message);
+}
 // Routes
 app.get("/", (req, res) => {
   CheckORUpdateJWT(req)
@@ -328,7 +329,11 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+try {
+  // Start server
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+} catch (err) {
+  botlog("Server error: " + err.message);
+}
