@@ -17,19 +17,19 @@ const app = express(); //Deploying Main
 const sqlite3 = require("sqlite3").verbose(); //Database
 const bcrypt = require("bcrypt"); //Passwords bcrypt
 const path = require("path"); //For .public
-const port = 3000; //Port
+const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
 const jwtcookieopt = {
   httpOnly: true,
-  secure: true,
+  secure: process.env.NODE_ENV === "production", // Use secure cookies only in production
   maxAge: 1000 * 60 * 15,
   sameSite: "Strict",
 };
 const updjwtcookieopt = {
   httpOnly: true,
-  secure: true,
+  secure: process.env.NODE_ENV === "production", // Use secure cookies only in production
   maxAge: 1000 * 60 * 60 * 24 * 3,
   sameSite: "Strict",
 };
