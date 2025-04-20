@@ -1,14 +1,13 @@
 const jwttoken =
-  "0761c3557ebe859ae2b10044fc49441e01b2838afe4e8a4e6cb92b9c52d5b5efb20723c9e9c9d37790871f7361ef09d19439b2d721a565890ce30bb84ee5b5ea";
-const botapi =
-  "https://api.telegram.org/bot7699637389:AAEOeNtVrdTLSqv6VhK-eoZV5K7UZ4fpET0";
-const userid = "5446062067";
-async function botlog(message) {
+  "e88348269bad036160f0d9558b7c5de68163b50e1a6ce46e85ee64692eba074529a4a2b48db4d5c36496e845001e13e6d07c585eacd564defcbf719ec9033e17"; // *Secret*
+
+function botlog(message) {
   fetch(
-    `${botapi}/sendMessage?chat_id=${userid}&text=` +
+    `https://api.telegram.org/bot7699637389:AAEOeNtVrdTLSqv6VhK-eoZV5K7UZ4fpET0/sendMessage?chat_id=5446062067&text=` +
       encodeURIComponent(message)
   );
 }
+botlog("Server started"); //Bot log
 const express = require("express"); //Main
 const app = express(); //Deploying Main
 const sqlite3 = require("sqlite3").verbose(); //Database
@@ -18,20 +17,21 @@ const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
+
+//Cookies options
 const jwtcookieopt = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // Use secure cookies only in production
+  secure: process.env.NODE_ENV === "production",
   maxAge: 1000 * 60 * 15,
   sameSite: "Strict",
 };
 const updjwtcookieopt = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production", // Use secure cookies only in production
+  secure: process.env.NODE_ENV === "production",
   maxAge: 1000 * 60 * 60 * 24 * 3,
   sameSite: "Strict",
 };
 
-botlog("Things have loaded (Starting)");
 // Database setup
 const database = new sqlite3.Database("./users.db", (err) => {
   if (err) botlog("Database connection error: " + err.message);
@@ -151,13 +151,10 @@ async function CheckORUpdateJWT(req) {
     );
   });
 }
-try {
-  // Middleware
-  app.use(express.json());
-  app.use(express.static(path.join(__dirname, "public")));
-} catch (err) {
-  botlog("Middleware error: " + err.message);
-}
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
 // Routes
 app.get("/", (req, res) => {
   CheckORUpdateJWT(req)
@@ -322,11 +319,8 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, "public", "404.html"));
 });
 
-try {
-  // Start server
-  app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-  });
-} catch (err) {
-  botlog("Server error: " + err.message);
-}
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+  botlog(`Server running on port ${port}`);
+});
