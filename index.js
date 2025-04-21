@@ -110,7 +110,7 @@ async function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
     const token = req.cookies.dmeow_access;
     authenticate(token).then((decoded) => {
-      if (decoded) return resolve(decoded);
+      return resolve(decoded);
     });
 
     const updatetoken = req.cookies.dmeow_upd;
