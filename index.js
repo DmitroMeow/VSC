@@ -110,13 +110,13 @@ async function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
     const token = req.cookies.dmeow_access;
     authenticate(token).then((decoded) => {
-      return resolve(decoded);
+     resolve(decoded);
     });
 
     const updatetoken = req.cookies.dmeow_upd;
-    if (!updatetoken) return reject("No token found");
+    if (!updatetoken) reject("No token found");
     authenticate(updatetoken).then((decoded) => {
-      if (!decoded) return reject("Invalid token");
+      if (!decoded) reject("Invalid token");
     });
 
     const userId = decoded.id;
@@ -126,11 +126,11 @@ async function CheckORUpdateJWT(req) {
       (err, row) => {
         if (err) {
           botlog(err.message || err);
-          return reject(err);
+         reject(err);
         }
         if (!row) {
           botlog(err.message || err);
-          return reject("Session not exists");
+           reject("Session not exists");
         }
 
         const updjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
@@ -142,7 +142,7 @@ async function CheckORUpdateJWT(req) {
           function (err) {
             if (err) {
               botlog(err.message || err);
-              return reject("Update session went wrong");
+               reject("Update session went wrong");
             }
             resolve({ jwt: newjwt, updjwt: updjwt });
           }
