@@ -106,29 +106,43 @@ async function addsession(id, token) {
   });
 }
 
-async function CheckORUpdateJWT(req) {
+function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
     const token = req.cookies.dmeow_access;
-    authenticate(token).then((decoded) => {
-      if (decoded) resolve(decoded);
+
+    // Authenticate the access token
+    authenticate(token).then((decodedAccess) => {
+      if (decodedAccess) {
+        return resolve(decodedAccess);
+      }
+
       const updatetoken = req.cookies.dmeow_upd;
-      if (!updatetoken) reject("No token found");
-      authenticate(updatetoken).then((decoded) => {
-        if (!decoded) reject("Invalid token");
-        const userId = decoded.userid;
+      if (!updatetoken) {
+        return reject("No update token");
+      }
+      // Authenticate the update token
+      authenticate(updatetoken).then((decodedUpdate) => {
+        if (!decodedUpdate) {
+          return reject("Invalid update token");
+        }
+
+        const userId = decodedUpdate.userid;
+
+        // Check if the session exists for the update token
         database.get(
           "SELECT * FROM sessions WHERE token = ?",
           [updatetoken],
           (err, row) => {
             if (err) {
               botlog(err.message || err);
-              reject(err);
-            }
-            if (!row) {
-              botlog(err.message || err);
-              reject("Session not exists");
+              return reject("Database error");
             }
 
+            if (!row) {
+              return reject("Session not exists");
+            }
+
+            // Generate new tokens
             const updjwt = jwt.sign({ id: userId }, jwttoken, {
               expiresIn: "3d",
             });
@@ -136,15 +150,21 @@ async function CheckORUpdateJWT(req) {
               expiresIn: "15m",
             });
 
+            // Update the session with the new update token
             database.run(
               "UPDATE sessions SET token = ? WHERE token = ?",
               [updjwt, updatetoken],
               function (err) {
                 if (err) {
                   botlog(err.message || err);
-                  reject("Update session went wrong");
+                  return reject("Failed to update session");
                 }
-                resolve({ jwt: newjwt, updjwt: updjwt });
+
+                resolve({
+                  status: "updated",
+                  jwt: newjwt,
+                  updjwt: updjwt,
+                });
               }
             );
           }
