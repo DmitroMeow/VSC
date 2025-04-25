@@ -110,45 +110,47 @@ async function CheckORUpdateJWT(req) {
   return new Promise((resolve, reject) => {
     const token = req.cookies.dmeow_access;
     authenticate(token).then((decoded) => {
-     resolve(decoded);
-    });
-
-    const updatetoken = req.cookies.dmeow_upd;
-    if (!updatetoken) reject("No token found");
-    authenticate(updatetoken).then((decoded) => {
-      if (!decoded) reject("Invalid token");
-    });
-
-    const userId = decoded.id;
-    database.get(
-      "SELECT * FROM sessions WHERE token = ?",
-      [updatetoken],
-      (err, row) => {
-        if (err) {
-          botlog(err.message || err);
-         reject(err);
-        }
-        if (!row) {
-          botlog(err.message || err);
-           reject("Session not exists");
-        }
-
-        const updjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
-        const newjwt = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
-
-        database.run(
-          "UPDATE sessions SET token = ? WHERE token = ?",
-          [updjwt, updatetoken],
-          function (err) {
+      if (decoded) resolve(decoded);
+      const updatetoken = req.cookies.dmeow_upd;
+      if (!updatetoken) reject("No token found");
+      authenticate(updatetoken).then((decoded) => {
+        if (!decoded) reject("Invalid token");
+        const userId = decoded.userid;
+        database.get(
+          "SELECT * FROM sessions WHERE token = ?",
+          [updatetoken],
+          (err, row) => {
             if (err) {
               botlog(err.message || err);
-               reject("Update session went wrong");
+              reject(err);
             }
-            resolve({ jwt: newjwt, updjwt: updjwt });
+            if (!row) {
+              botlog(err.message || err);
+              reject("Session not exists");
+            }
+
+            const updjwt = jwt.sign({ id: userId }, jwttoken, {
+              expiresIn: "3d",
+            });
+            const newjwt = jwt.sign({ id: userId }, jwttoken, {
+              expiresIn: "15m",
+            });
+
+            database.run(
+              "UPDATE sessions SET token = ? WHERE token = ?",
+              [updjwt, updatetoken],
+              function (err) {
+                if (err) {
+                  botlog(err.message || err);
+                  reject("Update session went wrong");
+                }
+                resolve({ jwt: newjwt, updjwt: updjwt });
+              }
+            );
           }
         );
-      }
-    );
+      });
+    });
   });
 }
 // Middleware
