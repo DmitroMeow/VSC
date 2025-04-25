@@ -126,7 +126,7 @@ function CheckORUpdateJWT(req) {
           return reject("Invalid update token");
         }
 
-        const userId = decodedUpdate.userid;
+        const userId = decodedUpdate.id;
 
         // Check if the session exists for the update token
         database.get(
