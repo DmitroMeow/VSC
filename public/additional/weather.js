@@ -1,4 +1,3 @@
-console.log("Weather script loaded");
 async function setNewWeather() {
   const response = await fetch("/weather", {
     method: "GET",
