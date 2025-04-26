@@ -173,9 +173,40 @@ function CheckORUpdateJWT(req) {
     });
   });
 }
+let weather = { current: { temp_c: "..", condition: { icon: "" } } }; // Change const to let
+let lastfetch = 0; // Change const to let
+
+async function fetchWeather() {
+  if (lastfetch > Date.now() - 3 * 60 * 1000) {
+    return weather;
+  }
+  const response = await fetch(
+    "https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=Brovary&aqi=no",
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  const data = await response.json();
+  weather = data; // Now this reassignment will work
+  lastfetch = Date.now();
+  return weather;
+}
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/weather", async (req, res) => {
+  try {
+    const weatherData = await fetchWeather();
+    res.json(weatherData);
+  } catch (err) {
+    console.error("Weather fetch error:", err);
+    res.status(500).send("Failed to fetch weather data");
+  }
+});
 
 // Routes
 app.get("/", (req, res) => {
@@ -185,7 +216,7 @@ app.get("/", (req, res) => {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
-      res.sendFile(path.join(__dirname, "public", "browser.html"));
+      res.sendFile(path.join(__dirname, "public", "homepage", "home.html"));
     })
     .catch((why) => {
       res.redirect("/login");
