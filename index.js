@@ -18,10 +18,10 @@ database
   .connect()
   .then((obj) => {
     obj.done(); // відключає з'єднання
-    console.log("Підключення успішне!");
+    console.log("Connected to the database");
   })
   .catch((error) => {
-    console.error("Помилка підключення:", error);
+    console.error("error to connect: ", error);
   });
 
 //Cookies options
@@ -37,20 +37,6 @@ const updjwtcookieopt = {
   maxAge: 1000 * 60 * 60 * 24 * 3,
   sameSite: "Strict",
 };
-
-database.none(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-  )
-`);
-database.none(`
-CREATE TABLE IF NOT EXISTS sessions (
- token TEXT PRIMARY KEY,
- userid INTEGER NOT NULL
-)
-`);
 
 // User functions DATABASE
 async function getUser(username) {
