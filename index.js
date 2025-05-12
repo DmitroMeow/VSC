@@ -209,28 +209,28 @@ app.get("/weather", async (req, res) => {
 });
 
 // Routes
-app.get("/", (req, res) => {
+app.get("/home", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
       if (response.jwt && response.updjwt) {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
-      res.sendFile(path.join(__dirname, "public", "homepage", "home.html"));
+      res.sendFile(path.join(__dirname, "public", "homepage", "index.html"));
     })
     .catch((why) => {
       res.redirect("/login");
     });
 });
 
-app.get("/account", (req, res) => {
+app.get("/account/", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
       if (response.jwt && response.updjwt) {
         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
       }
-      res.sendFile(path.join(__dirname, "public", "account.html"));
+      res.sendFile(path.join(__dirname, "public", "account", "index.html"));
     })
     .catch((why) => {
       res.redirect("/login");
@@ -257,40 +257,24 @@ app.get("/login", (req, res) => {
     });
 });
 
-app.get("/token", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      if (response.jwt && response.updjwt) {
-        res.cookie("dmeow_access", response.jwt, jwtcookieopt);
-        res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
-      }
-      res.send("TOKEN_ACTIVE");
-    })
-    .catch((why) => {
-      res.send(why);
-    });
-});
+// app.get("/token", (req, res) => {
+//   CheckORUpdateJWT(req)
+//     .then((response) => {
+//       if (response.jwt && response.updjwt) {
+//         res.cookie("dmeow_access", response.jwt, jwtcookieopt);
+//         res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
+//       }
+//       res.send("TOKEN_ACTIVE");
+//     })
+//     .catch((why) => {
+//       res.send(why);
+//     });
+// });
 
 app.get("/check-database", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
       database.all("SELECT username, id FROM users", (err, rows) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).send("Internal server error");
-        }
-        res.json(rows);
-      });
-    })
-    .catch((why) => {
-      res.status(401).send(why);
-    });
-});
-
-app.get("/check-sessions", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      database.all("SELECT token, userid FROM sessions", (err, rows) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).send("Internal server error");
