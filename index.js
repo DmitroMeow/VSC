@@ -9,10 +9,17 @@ const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
-const pgp = require("pg-promise")(/*options*/);
-const database = pgp(
-  "postgresql://neondb_owner:npg_YTIMu8Ek2Ucm@ep-summer-sound-a2xoc786-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-);
+const pgp = require("pg-promise")({
+  // Initialization Options
+});
+
+const cn = {
+  connectionString:
+    "postgresql://neondb_owner:npg_YTIMu8Ek2Ucm@ep-summer-sound-a2xoc786-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require",
+  max: 30, // use up to 30 connections
+};
+
+const database = pgp(cn);
 
 database
   .connect()
@@ -41,30 +48,26 @@ const updjwtcookieopt = {
 // User functions DATABASE
 async function getUser(username) {
   return new Promise((resolve, reject) => {
-    database.oneOrNone(
-      "SELECT * FROM users WHERE username = ?",
-      [username],
-      (err, row) => {
-        if (err) return reject(err);
-        resolve(row || null);
-      }
-    );
+    database
+      .oneOrNone("SELECT * FROM users WHERE username = $1", [username])
+      .then((user) => resolve(user))
+      .catch((err) => reject(err));
   });
 }
 
 async function addUser(username, password) {
   const hashedPassword = await bcrypt.hash(password, 10);
   return new Promise((resolve, reject) => {
-    database.any(
-      "INSERT INTO users (username, password) VALUES (?, ?)",
-      [username, hashedPassword],
-      function (err) {
-        if (err) return reject(err);
-        resolve(this.lastID);
-      }
-    );
+    database
+      .one(
+        "INSERT INTO users (username, password) VALUES ($1, $2) RETURNING id",
+        [username, hashedPassword]
+      )
+      .then((data) => resolve(data.id))
+      .catch((err) => reject(err));
   });
 }
+
 //User functions JSON WEB TOKEN
 
 async function authenticate(token) {
@@ -78,14 +81,10 @@ async function authenticate(token) {
 
 async function addsession(id, token) {
   return new Promise((resolve, reject) => {
-    database.any(
-      "INSERT INTO sessions (token, userid) VALUES (?, ?)",
-      [token, id],
-      function (err) {
-        if (err) return reject(err);
-        resolve(true);
-      }
-    );
+    database
+      .none("INSERT INTO sessions (token, userid) VALUES ($1, $2)", [token, id])
+      .then(() => resolve(true))
+      .catch((err) => reject(err));
   });
 }
 
@@ -103,6 +102,7 @@ function CheckORUpdateJWT(req) {
       if (!updatetoken) {
         return reject("No update token");
       }
+
       // Authenticate the update token
       authenticate(updatetoken).then((decodedUpdate) => {
         if (!decodedUpdate) {
@@ -112,12 +112,9 @@ function CheckORUpdateJWT(req) {
         const userId = decodedUpdate.id;
 
         // Check if the session exists for the update token
-        database.oneOrNone(
-          "SELECT * FROM sessions WHERE token = ?",
-          [updatetoken],
-          (err, row) => {
-            if (err) return reject("Database error");
-
+        database
+          .oneOrNone("SELECT * FROM sessions WHERE token = $1", [updatetoken])
+          .then((row) => {
             if (!row) {
               return reject("Session not exists");
             }
@@ -131,25 +128,26 @@ function CheckORUpdateJWT(req) {
             });
 
             // Update the session with the new update token
-            database.any(
-              "UPDATE sessions SET token = ? WHERE token = ?",
-              [updjwt, updatetoken],
-              function (err) {
-                if (err) return reject("Failed to update session");
-
+            database
+              .none("UPDATE sessions SET token = $1 WHERE token = $2", [
+                updjwt,
+                updatetoken,
+              ])
+              .then(() => {
                 resolve({
                   status: "updated",
                   jwt: newjwt,
                   updjwt: updjwt,
                 });
-              }
-            );
-          }
-        );
+              })
+              .catch((err) => reject("Failed to update session"));
+          })
+          .catch((err) => reject("Database error"));
       });
     });
   });
 }
+
 let weather = { current: { temp_c: "..", condition: { icon: "" } } }; // Change const to let
 let lastfetch = 0; // Change const to let
 
@@ -186,6 +184,10 @@ app.get("/weather", async (req, res) => {
 });
 
 // Routes
+app.get("/", (req, res) => {
+  res.redirect("/home");
+});
+
 app.get("/home", (req, res) => {
   CheckORUpdateJWT(req)
     .then((response) => {
