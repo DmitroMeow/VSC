@@ -14,7 +14,8 @@ const database = pgp(
   "postgresql://neondb_owner:npg_YTIMu8Ek2Ucm@ep-summer-sound-a2xoc786-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 );
 
-db.connect()
+database
+  .connect()
   .then((obj) => {
     obj.done(); // відключає з'єднання
     console.log("Підключення успішне!");
