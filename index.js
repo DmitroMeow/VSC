@@ -1,22 +1,27 @@
 const jwttoken =
   "e488348269bad036160f0d9558b7c5de68163b50e1a6ce46e85ee64692eba074529a4a2b48db4d5c36496e845001e13e6d07c585eacd564defcbf719ec9033e17"; // *Secret*
 
-function botlog(message) {
-  fetch(
-    `https://api.telegram.org/bot7699637389:AAEOeNtVrdTLSqv6VhK-eoZV5K7UZ4fpET0/sendMessage?chat_id=5446062067&text=` +
-      encodeURIComponent(message)
-  );
-}
-botlog("Server started"); //Bot log
 const express = require("express"); //Main
 const app = express(); //Deploying Main
-const sqlite3 = require("sqlite3").verbose(); //Database
 const bcrypt = require("bcrypt"); //Passwords bcrypt
 const path = require("path"); //For .public
 const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
+const pgp = require("pg-promise")(/*options*/);
+const database = pgp(
+  "postgresql://neondb_owner:npg_YTIMu8Ek2Ucm@ep-summer-sound-a2xoc786-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+);
+
+db.connect()
+  .then((obj) => {
+    obj.done(); // відключає з'єднання
+    console.log("Підключення успішне!");
+  })
+  .catch((error) => {
+    console.error("Помилка підключення:", error);
+  });
 
 //Cookies options
 const jwtcookieopt = {
@@ -32,20 +37,15 @@ const updjwtcookieopt = {
   sameSite: "Strict",
 };
 
-// Database setup
-const database = new sqlite3.Database("./users.db", (err) => {
-  if (err) botlog("Database connection error: " + err.message);
-});
-
 try {
-  database.run(`
+  database.any(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )
 `);
-  database.run(`
+  database.any(`
 CREATE TABLE IF NOT EXISTS sessions (
  token TEXT PRIMARY KEY,
  userid INTEGER NOT NULL
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 // User functions DATABASE
 async function getUser(username) {
   return new Promise((resolve, reject) => {
-    database.get(
+    database.oneOrNone(
       "SELECT * FROM users WHERE username = ?",
       [username],
       (err, row) => {
@@ -71,7 +71,7 @@ async function getUser(username) {
 async function addUser(username, password) {
   const hashedPassword = await bcrypt.hash(password, 10);
   return new Promise((resolve, reject) => {
-    database.run(
+    database.any(
       "INSERT INTO users (username, password) VALUES (?, ?)",
       [username, hashedPassword],
       function (err) {
@@ -94,7 +94,7 @@ async function authenticate(token) {
 
 async function addsession(id, token) {
   return new Promise((resolve, reject) => {
-    database.run(
+    database.any(
       "INSERT INTO sessions (token, userid) VALUES (?, ?)",
       [token, id],
       function (err) {
@@ -129,7 +129,7 @@ function CheckORUpdateJWT(req) {
         const userId = decodedUpdate.id;
 
         // Check if the session exists for the update token
-        database.get(
+        database.any(
           "SELECT * FROM sessions WHERE token = ?",
           [updatetoken],
           (err, row) => {
@@ -151,7 +151,7 @@ function CheckORUpdateJWT(req) {
             });
 
             // Update the session with the new update token
-            database.run(
+            database.any(
               "UPDATE sessions SET token = ? WHERE token = ?",
               [updjwt, updatetoken],
               function (err) {
@@ -270,22 +270,6 @@ app.get("/login", (req, res) => {
 //       res.send(why);
 //     });
 // });
-
-app.get("/check-database", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      database.all("SELECT username, id FROM users", (err, rows) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).send("Internal server error");
-        }
-        res.json(rows);
-      });
-    })
-    .catch((why) => {
-      res.status(401).send(why);
-    });
-});
 
 app.post("/loginreq", async (req, res) => {
   try {
