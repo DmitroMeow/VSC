@@ -38,23 +38,20 @@ const updjwtcookieopt = {
   sameSite: "Strict",
 };
 
-try {
-  database.any(`
+database.none(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
   )
 `);
-  database.any(`
+database.none(`
 CREATE TABLE IF NOT EXISTS sessions (
  token TEXT PRIMARY KEY,
  userid INTEGER NOT NULL
 )
 `);
-} catch (err) {
-  botlog("Database setup error: " + err.message);
-}
+
 // User functions DATABASE
 async function getUser(username) {
   return new Promise((resolve, reject) => {
@@ -99,7 +96,6 @@ async function addsession(id, token) {
       "INSERT INTO sessions (token, userid) VALUES (?, ?)",
       [token, id],
       function (err) {
-        if (err) botlog(err.message || err);
         if (err) return reject(err);
         resolve(true);
       }
@@ -130,14 +126,11 @@ function CheckORUpdateJWT(req) {
         const userId = decodedUpdate.id;
 
         // Check if the session exists for the update token
-        database.any(
+        database.oneOrNone(
           "SELECT * FROM sessions WHERE token = ?",
           [updatetoken],
           (err, row) => {
-            if (err) {
-              botlog(err.message || err);
-              return reject("Database error");
-            }
+            if (err) return reject("Database error");
 
             if (!row) {
               return reject("Session not exists");
@@ -156,10 +149,7 @@ function CheckORUpdateJWT(req) {
               "UPDATE sessions SET token = ? WHERE token = ?",
               [updjwt, updatetoken],
               function (err) {
-                if (err) {
-                  botlog(err.message || err);
-                  return reject("Failed to update session");
-                }
+                if (err) return reject("Failed to update session");
 
                 resolve({
                   status: "updated",
@@ -299,7 +289,6 @@ app.post("/loginreq", async (req, res) => {
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully logined up");
   } catch (err) {
-    botlog("Login error:", err);
     res.status(500).send("Internal server error");
   }
 });
@@ -331,7 +320,6 @@ app.post("/signupreq", async (req, res) => {
     await addsession(userId, updatetoken);
     res.status(200).send("Successfully signed up");
   } catch (err) {
-    botlog("Signup error:", err);
     res.status(500).send(err.message || "Internal server error");
   }
 });
@@ -344,5 +332,4 @@ app.use((req, res) => {
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-  botlog(`Server running on port ${port}`);
 });
