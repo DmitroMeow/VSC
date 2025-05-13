@@ -8,7 +8,7 @@ async function setNewWeather() {
   const data = await response.json();
   const weather = document.getElementById("weather-desc");
   const weatherIcon = document.getElementById("weather-icon");
-  weather.innerHTML = "Brovary " + data.current.temp_c + "°C";
+  weather.innerHTML = data.location.name + " " + data.current.temp_c + "°C";
   weatherIcon.src = data.current.condition.icon;
 }
 setNewWeather();

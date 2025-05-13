@@ -10,11 +10,7 @@ const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
 const rateLimit = require("express-rate-limit"); //Rate limit
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // min
-  max: 1, // 1 request per minute
-  message: "Too many requests, please try again later.",
-});
+const { message } = require("telegram/client");
 const pgp = require("pg-promise")({
   // Initialization Options
 });
@@ -158,79 +154,128 @@ function CheckORUpdateJWT(req) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/weather", async (req, res) => {
-  try {
-    const ip =
-      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
+app.get(
+  "/weather",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  async (req, res) => {
+    try {
+      const ip =
+        req.headers["x-forwarded-for"]?.split(",")[0] ||
+        req.socket.remoteAddress;
 
-    const response = await fetch(
-      `https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=${ip}&aqi=no`
-    );
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=${ip}&aqi=no`
+      );
 
-    if (!response.ok) {
-      throw new Error(`Weather API error: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.warn("❌ Weather fetch error:", error.message);
+      res.status(500).json({ error: "weather error" });
     }
-
-    const data = await response.json();
-    res.json(data);
-  } catch (error) {
-    console.warn("❌ Weather fetch error:", error.message);
-    res.status(500).json({ error: "weather error" });
   }
-});
+);
 
 // Routes
-app.get("/", (req, res) => {
-  res.redirect("/home");
-});
+app.get(
+  "/",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  (req, res) => {
+    res.redirect("/home");
+  }
+);
 
-app.get("/home", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      if (response.jwt && response.updjwt) {
-        res.cookie("dmeow_access", response.jwt, jwtcookieopt);
-        res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
-      }
-      res.sendFile(path.join(__dirname, "public", "homepage", "index.html"));
-    })
-    .catch((why) => {
-      res.redirect("/login");
-    });
-});
+app.get(
+  "/home",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  (req, res) => {
+    CheckORUpdateJWT(req)
+      .then((response) => {
+        if (response.jwt && response.updjwt) {
+          res.cookie("dmeow_access", response.jwt, jwtcookieopt);
+          res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
+        }
+        res.sendFile(path.join(__dirname, "public", "homepage", "index.html"));
+      })
+      .catch((why) => {
+        res.redirect("/login");
+      });
+  }
+);
 
-app.get("/account/", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      if (response.jwt && response.updjwt) {
-        res.cookie("dmeow_access", response.jwt, jwtcookieopt);
-        res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
-      }
-      res.sendFile(path.join(__dirname, "public", "account", "index.html"));
-    })
-    .catch((why) => {
-      res.redirect("/login");
-    });
-});
+app.get(
+  "/account/",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  (req, res) => {
+    CheckORUpdateJWT(req)
+      .then((response) => {
+        if (response.jwt && response.updjwt) {
+          res.cookie("dmeow_access", response.jwt, jwtcookieopt);
+          res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
+        }
+        res.sendFile(path.join(__dirname, "public", "account", "index.html"));
+      })
+      .catch((why) => {
+        res.redirect("/login");
+      });
+  }
+);
 
-app.get("/signup", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      res.redirect("/account");
-    })
-    .catch((why) => {
-      res.sendFile(path.join(__dirname, "public", "joinus", "signup.html"));
-    });
-});
+app.get(
+  "/signup",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  (req, res) => {
+    CheckORUpdateJWT(req)
+      .then((response) => {
+        res.redirect("/account");
+      })
+      .catch((why) => {
+        res.sendFile(path.join(__dirname, "public", "joinus", "signup.html"));
+      });
+  }
+);
 
-app.get("/login", (req, res) => {
-  CheckORUpdateJWT(req)
-    .then((response) => {
-      res.redirect("/account");
-    })
-    .catch((why) => {
-      res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
-    });
-});
+app.get(
+  "/login",
+  rateLimit({
+    windowMs: 1000 * 5,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  (req, res) => {
+    CheckORUpdateJWT(req)
+      .then((response) => {
+        res.redirect("/account");
+      })
+      .catch((why) => {
+        res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
+      });
+  }
+);
 
 // app.get("/token", (req, res) => {
 //   CheckORUpdateJWT(req)
@@ -246,67 +291,87 @@ app.get("/login", (req, res) => {
 //     });
 // });
 
-app.post("/loginreq", limiter, async (req, res) => {
-  try {
-    const { username, password } = req.body;
+app.post(
+  "/loginreq",
+  rateLimit({
+    windowMs: 1000 * 20,
+    max: 10,
+    message: "Too many requests, please try again later.",
+  }),
+  async (req, res) => {
+    try {
+      const { username, password } = req.body;
 
-    if (!password) {
-      return res.status(400).send("Password is required");
+      if (!password) {
+        return res.status(400).send("Password is required");
+      }
+
+      const user = await getUser(username);
+      if (!user) {
+        return res.status(404).send("User not found");
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).send("Invalid password");
+      }
+      const userId = user.id;
+
+      const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
+      const updatetoken = jwt.sign({ id: userId }, jwttoken, {
+        expiresIn: "3d",
+      });
+
+      res.cookie("dmeow_access", token, jwtcookieopt);
+      res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
+      await addsession(userId, updatetoken);
+      res.status(200).send("Successfully logined up");
+    } catch (err) {
+      res.status(500).send("Internal server error");
     }
-
-    const user = await getUser(username);
-    if (!user) {
-      return res.status(404).send("User not found");
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).send("Invalid password");
-    }
-    const userId = user.id;
-
-    const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
-
-    res.cookie("dmeow_access", token, jwtcookieopt);
-    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
-    await addsession(userId, updatetoken);
-    res.status(200).send("Successfully logined up");
-  } catch (err) {
-    res.status(500).send("Internal server error");
   }
-});
+);
 
-app.post("/signupreq", limiter, async (req, res) => {
-  try {
-    const { username, password } = req.body;
+app.post(
+  "/signupreq",
+  rateLimit({
+    windowMs: 1000 * 20,
+    max: 3,
+    message: "Too many requests, please try again later.",
+  }),
+  async (req, res) => {
+    try {
+      const { username, password } = req.body;
 
-    if (!username || typeof username !== "string") {
-      return res.status(400).send("Invalid username");
-    }
-    if (!/^[a-zA-Z0-9]+$/.test(username)) {
-      return res.status(400).send("Username must be alphanumeric");
-    }
-    if (!password || password.length < 8) {
-      return res.status(400).send("Password must be 8+ chars");
-    }
-    const existingUser = await getUser(username);
-    if (existingUser) {
-      return res.status(409).send("Username already exists");
-    }
+      if (!username || typeof username !== "string") {
+        return res.status(400).send("Invalid username");
+      }
+      if (!/^[a-zA-Z0-9]+$/.test(username)) {
+        return res.status(400).send("Username must be alphanumeric");
+      }
+      if (!password || password.length < 8) {
+        return res.status(400).send("Password must be 8+ chars");
+      }
+      const existingUser = await getUser(username);
+      if (existingUser) {
+        return res.status(409).send("Username already exists");
+      }
 
-    const userId = await addUser(username, password);
+      const userId = await addUser(username, password);
 
-    const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
-    const updatetoken = jwt.sign({ id: userId }, jwttoken, { expiresIn: "3d" });
-    res.cookie("dmeow_access", token, jwtcookieopt);
-    res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
-    await addsession(userId, updatetoken);
-    res.status(200).send("Successfully signed up");
-  } catch (err) {
-    res.status(500).send(err.message || "Internal server error");
+      const token = jwt.sign({ id: userId }, jwttoken, { expiresIn: "15m" });
+      const updatetoken = jwt.sign({ id: userId }, jwttoken, {
+        expiresIn: "3d",
+      });
+      res.cookie("dmeow_access", token, jwtcookieopt);
+      res.cookie("dmeow_upd", updatetoken, updjwtcookieopt);
+      await addsession(userId, updatetoken);
+      res.status(200).send("Successfully signed up");
+    } catch (err) {
+      res.status(500).send(err.message || "Internal server error");
+    }
   }
-});
+);
 
 // Error handling
 app.use((req, res) => {
