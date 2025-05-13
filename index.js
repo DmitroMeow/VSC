@@ -10,7 +10,6 @@ const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
 const rateLimit = require("express-rate-limit"); //Rate limit
-const { message } = require("telegram/client");
 const { get } = require("http");
 const pgp = require("pg-promise")({
   // Initialization Options
