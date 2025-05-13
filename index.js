@@ -9,6 +9,12 @@ const port = process.env.PORT || 3000; //Port
 const jwt = require("jsonwebtoken"); //Auth
 const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
+const rateLimit = require("express-rate-limit"); //Rate limit
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // min
+  max: 1, // 1 request per minute
+  message: "Too many requests, please try again later.",
+});
 const pgp = require("pg-promise")({
   // Initialization Options
 });
@@ -148,38 +154,28 @@ function CheckORUpdateJWT(req) {
   });
 }
 
-let weather = { current: { temp_c: "..", condition: { icon: "" } } }; // Change const to let
-let lastfetch = 0; // Change const to let
-
-async function fetchWeather() {
-  if (lastfetch > Date.now() - 3 * 60 * 1000) {
-    return weather;
-  }
-  const response = await fetch(
-    "https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=Brovary&aqi=no",
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
-  const data = await response.json();
-  weather = data; // Now this reassignment will work
-  lastfetch = Date.now();
-  return weather;
-}
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/weather", async (req, res) => {
   try {
-    const weatherData = await fetchWeather();
-    res.json(weatherData);
-  } catch (err) {
-    console.error("Weather fetch error:", err);
-    res.status(500).send("Failed to fetch weather data");
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
+
+    const response = await fetch(
+      `https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=${ip}&aqi=no`
+    );
+
+    if (!response.ok) {
+      throw new Error(`Weather API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.warn("❌ Weather fetch error:", error.message);
+    res.status(500).json({ error: "weather error" });
   }
 });
 
@@ -250,7 +246,7 @@ app.get("/login", (req, res) => {
 //     });
 // });
 
-app.post("/loginreq", async (req, res) => {
+app.post("/loginreq", limiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -281,7 +277,7 @@ app.post("/loginreq", async (req, res) => {
   }
 });
 
-app.post("/signupreq", async (req, res) => {
+app.post("/signupreq", limiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
