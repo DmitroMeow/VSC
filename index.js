@@ -11,6 +11,7 @@ const cookieParser = require("cookie-parser"); //Give cookie
 app.use(cookieParser()); // Use cookies
 const rateLimit = require("express-rate-limit"); //Rate limit
 const { message } = require("telegram/client");
+const { get } = require("http");
 const pgp = require("pg-promise")({
   // Initialization Options
 });
@@ -154,128 +155,85 @@ function CheckORUpdateJWT(req) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get(
-  "/weather",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  async (req, res) => {
-    try {
-      const ip =
-        req.headers["x-forwarded-for"]?.split(",")[0] ||
-        req.socket.remoteAddress;
+const getlimiter = rateLimit({
+  windowMs: 1000 * 5,
+  max: 30,
+  message: "Too many requests, please try again later.",
+});
 
-      const response = await fetch(
-        `https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=${ip}&aqi=no`
-      );
+app.get("/weather", getlimiter, async (req, res) => {
+  try {
+    const ip =
+      req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress;
 
-      if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
-      }
+    const response = await fetch(
+      `https://api.weatherapi.com/v1/current.json?key=5f6f29da20324c2499e192710251004&q=${ip}&aqi=no`
+    );
 
-      const data = await response.json();
-      res.json(data);
-    } catch (error) {
-      console.warn("❌ Weather fetch error:", error.message);
-      res.status(500).json({ error: "weather error" });
+    if (!response.ok) {
+      throw new Error(`Weather API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.warn("❌ Weather fetch error:", error.message);
+    res.status(500).json({ error: "weather error" });
   }
-);
+});
 
 // Routes
-app.get(
-  "/",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  (req, res) => {
-    res.redirect("/home");
-  }
-);
+app.get("/", getlimiter, (req, res) => {
+  res.redirect("/home");
+});
 
-app.get(
-  "/home",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  (req, res) => {
-    CheckORUpdateJWT(req)
-      .then((response) => {
-        if (response.jwt && response.updjwt) {
-          res.cookie("dmeow_access", response.jwt, jwtcookieopt);
-          res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
-        }
-        res.sendFile(path.join(__dirname, "public", "homepage", "index.html"));
-      })
-      .catch((why) => {
-        res.redirect("/login");
-      });
-  }
-);
+app.get("/home", getlimiter, (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      if (response.jwt && response.updjwt) {
+        res.cookie("dmeow_access", response.jwt, jwtcookieopt);
+        res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
+      }
+      res.sendFile(path.join(__dirname, "public", "homepage", "index.html"));
+    })
+    .catch((why) => {
+      res.redirect("/login");
+    });
+});
 
-app.get(
-  "/account/",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  (req, res) => {
-    CheckORUpdateJWT(req)
-      .then((response) => {
-        if (response.jwt && response.updjwt) {
-          res.cookie("dmeow_access", response.jwt, jwtcookieopt);
-          res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
-        }
-        res.sendFile(path.join(__dirname, "public", "account", "index.html"));
-      })
-      .catch((why) => {
-        res.redirect("/login");
-      });
-  }
-);
+app.get("/account/", getlimiter, (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      if (response.jwt && response.updjwt) {
+        res.cookie("dmeow_access", response.jwt, jwtcookieopt);
+        res.cookie("dmeow_upd", response.updjwt, updjwtcookieopt);
+      }
+      res.sendFile(path.join(__dirname, "public", "account", "index.html"));
+    })
+    .catch((why) => {
+      res.redirect("/login");
+    });
+});
 
-app.get(
-  "/signup",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  (req, res) => {
-    CheckORUpdateJWT(req)
-      .then((response) => {
-        res.redirect("/account");
-      })
-      .catch((why) => {
-        res.sendFile(path.join(__dirname, "public", "joinus", "signup.html"));
-      });
-  }
-);
+app.get("/signup", getlimiter, (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      res.redirect("/account");
+    })
+    .catch((why) => {
+      res.sendFile(path.join(__dirname, "public", "joinus", "signup.html"));
+    });
+});
 
-app.get(
-  "/login",
-  rateLimit({
-    windowMs: 1000 * 5,
-    max: 10,
-    message: "Too many requests, please try again later.",
-  }),
-  (req, res) => {
-    CheckORUpdateJWT(req)
-      .then((response) => {
-        res.redirect("/account");
-      })
-      .catch((why) => {
-        res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
-      });
-  }
-);
+app.get("/login", getlimiter, (req, res) => {
+  CheckORUpdateJWT(req)
+    .then((response) => {
+      res.redirect("/account");
+    })
+    .catch((why) => {
+      res.sendFile(path.join(__dirname, "public", "joinus", "login.html"));
+    });
+});
 
 // app.get("/token", (req, res) => {
 //   CheckORUpdateJWT(req)
