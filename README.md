@@ -1,4 +1,1 @@
-Hiiii :3
-
-You can contact me:
-dmitromeow (discord, telegram)
+# Project closed, wait v2.
